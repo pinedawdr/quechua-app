@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, Alert, ScrollView, TouchableOpacity, Switch, Image, ActivityIndicator, SafeAreaView } from 'react-native';
 import { updateProfile } from 'firebase/auth';
-import { doc, updateDoc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import Header from '../components/Header';
 import Button from '../components/Button';
@@ -16,7 +16,7 @@ import { uploadImage } from '../services/cloudinary';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, isGuest, guestName, logout, setUser } = useAuthStore();
-  const { readingProgress, exerciseProgress, verbalFluencyProgress, medals, clearProgress } = useProgressStore();
+  const { clearProgress, medals } = useProgressStore();
   
   const [name, setName] = useState(user?.displayName?.split(' ')[0] || guestName);
   const [lastName, setLastName] = useState(user?.displayName?.split(' ').slice(1).join(' ') || '');
@@ -95,16 +95,17 @@ const ProfileScreen = ({ navigation }) => {
             setLevel(getLevelLabel(calculatedLevel)); // Actualizar también el nivel para el formulario
           } else {
             // Si no hay documento de medallas, usar las medallas locales
-            setUserMedals(medals.length);
+            const localMedals = medals.length;
+            setUserMedals(localMedals);
             
             // Calcular nivel basado en medallas
-            const calculatedLevel = calculateUserLevel(medals.length);
+            const calculatedLevel = calculateUserLevel(localMedals);
             setUserLevel(calculatedLevel);
             setLevel(getLevelLabel(calculatedLevel)); // Actualizar también el nivel para el formulario
             
             // Guardar conteo de medallas en Firestore
             await setDoc(doc(db, 'users', user.uid, 'stats', 'medals'), {
-              count: medals.length,
+              count: localMedals,
               updatedAt: new Date().toISOString()
             }, { merge: true });
           }
@@ -113,28 +114,18 @@ const ProfileScreen = ({ navigation }) => {
         }
       } else {
         // Para modo invitado, usar datos locales
-        const readingCount = Object.keys(readingProgress).length;
-        const exerciseCount = Object.keys(exerciseProgress).length;
-        const verbalCount = Object.keys(verbalFluencyProgress).length;
-        const totalCompleted = readingCount + exerciseCount + verbalCount;
-        
-        setProfileStats({
-          booksRead: readingCount,
-          exercisesCompleted: exerciseCount + verbalCount,
-          totalMinutes: totalCompleted * 5 // Estimación básica de minutos
-        });
-        
-        setUserMedals(medals.length);
+        const localMedals = medals.length;
+        setUserMedals(localMedals);
         
         // Calcular nivel basado en medallas
-        const calculatedLevel = calculateUserLevel(medals.length);
+        const calculatedLevel = calculateUserLevel(localMedals);
         setUserLevel(calculatedLevel);
         setLevel(getLevelLabel(calculatedLevel)); // Actualizar también el nivel para el formulario
       }
     };
     
     loadProfileData();
-  }, [user, isGuest, readingProgress, exerciseProgress, verbalFluencyProgress, medals]);
+  }, [user, isGuest]); // Eliminar medals de las dependencias
   
   // Calcular nivel de usuario basado en medallas
   const calculateUserLevel = (medals) => {
@@ -450,12 +441,28 @@ const ProfileScreen = ({ navigation }) => {
               
               if (!isGuest && user) {
                 try {
-                  // Marcar como "reset" en Firestore para mantener historial
+                  // Crear una colección para mantener el historial de restablecimientos
                   await setDoc(doc(db, 'users', user.uid, 'stats', 'reset'), {
                     resetAt: new Date().toISOString(),
                     previousStats: currentStats,
                     previousMedals: currentMedals
                   });
+                  
+                  // Limpiar colecciones principales de progreso
+                  const collections = ['reading', 'quizzes', 'verbalExercises', 'medals'];
+                  
+                  for (const collName of collections) {
+                    const collRef = collection(db, 'users', user.uid, collName);
+                    const snapshot = await getDocs(collRef);
+                    
+                    // Procesar documentos en lotes para evitar sobrecarga
+                    const deletePromises = [];
+                    snapshot.docs.forEach(doc => {
+                      deletePromises.push(deleteDoc(doc.ref));
+                    });
+                    
+                    await Promise.all(deletePromises);
+                  }
                   
                   // Actualizar estadísticas
                   await setDoc(doc(db, 'users', user.uid, 'stats', 'overview'), {
@@ -846,6 +853,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.primary,
+  },
+  levelValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.accent,
   },
   levelBarContainer: {
     marginBottom: 16,

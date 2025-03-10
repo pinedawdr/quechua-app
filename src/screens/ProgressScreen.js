@@ -10,12 +10,7 @@ import { COLORS, globalStyles } from '../styles/globalStyles';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const ProgressScreen = ({ navigation }) => {
-  const { 
-    readingProgress, 
-    exerciseProgress, 
-    verbalFluencyProgress,
-    medals 
-  } = useProgressStore();
+  const { medals } = useProgressStore();
   
   const { user, isGuest, guestName } = useAuthStore();
   const [readingStats, setReadingStats] = useState({ total: 0, completed: 0 });
@@ -24,6 +19,7 @@ const ProgressScreen = ({ navigation }) => {
   const [showAllMedals, setShowAllMedals] = useState(false);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userMedals, setUserMedals] = useState([]);
   
   useEffect(() => {
     setLoading(true);
@@ -44,87 +40,92 @@ const ProgressScreen = ({ navigation }) => {
     };
     
     fetchData();
-  }, [user, isGuest, readingProgress, exerciseProgress, verbalFluencyProgress, medals]);
+    // Eliminar readingProgress, exerciseProgress, verbalFluencyProgress, medals de las dependencias
+  }, [user, isGuest]);
   
-  // Fetch data from Firestore for authenticated users
+  // Extraer datos de Firestore para usuarios autenticados sin actualizar el store
   const fetchFirestoreData = async () => {
-    // Fetch reading stats
-    const readingQuery = query(
-      collection(db, 'users', user.uid, 'reading')
-    );
-    const readingSnapshot = await getDocs(readingQuery);
-    const readingCount = readingSnapshot.size;
-    
-    // Fetch total books from database
-    const booksQuery = query(collection(db, 'books'));
-    const booksSnapshot = await getDocs(booksQuery);
-    const totalBooks = booksSnapshot.size;
-    
-    // Fetch exercise stats
-    const exerciseQuery = query(
-      collection(db, 'users', user.uid, 'quizzes')
-    );
-    const exerciseSnapshot = await getDocs(exerciseQuery);
-    const exerciseCount = exerciseSnapshot.size;
-    
-    // Fetch verbal fluency stats
-    const verbalQuery = query(
-      collection(db, 'users', user.uid, 'verbalExercises'),
-      where('completed', '==', true)
-    );
-    const verbalSnapshot = await getDocs(verbalQuery);
-    const verbalCount = verbalSnapshot.size;
-    
-    // Fetch total verbal exercises from database
-    const verbalExercisesQuery = query(collection(db, 'verbalExercises'));
-    const verbalExercisesSnapshot = await getDocs(verbalExercisesQuery);
-    const totalVerbalExercises = verbalExercisesSnapshot.size;
-    
-    // Fetch recent activity
-    const activityQuery = query(
-      collection(db, 'users', user.uid, 'activity'),
-      orderBy('timestamp', 'desc'),
-      limit(5)
-    );
-    const activitySnapshot = await getDocs(activityQuery);
-    const activityList = activitySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    
-    // Set statistics
-    setReadingStats({ total: totalBooks, completed: readingCount });
-    setExerciseStats({ total: exerciseCount + totalBooks, completed: exerciseCount });
-    setVerbalsStats({ total: totalVerbalExercises, completed: verbalCount });
-    setRecentActivity(activityList);
-    
-    // Cargar medallas directamente de la store para asegurarnos que estén sincronizadas
-    const userMedals = useProgressStore.getState().medals;
-    if (userMedals && userMedals.length > 0) {
-      console.log("Medals found in store:", userMedals.length);
-    }
-
-    // También intentar cargar desde Firestore si el usuario está autenticado
     try {
-      const medalsCollection = collection(db, 'users', user.uid, 'medals');
-      const medalsSnapshot = await getDocs(medalsCollection);
+      // Fetch reading stats
+      const readingQuery = query(collection(db, 'users', user.uid, 'reading'));
+      const readingSnapshot = await getDocs(readingQuery);
+      const readingCount = readingSnapshot.size;
       
-      if (!medalsSnapshot.empty) {
-        // Si hay medallas en Firestore, actualizar la store global
-        const firestoreMedals = medalsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+      // Fetch total books from database
+      const booksQuery = query(collection(db, 'books'));
+      const booksSnapshot = await getDocs(booksQuery);
+      const totalBooks = booksSnapshot.size;
+      
+      // Fetch exercise stats
+      const exerciseQuery = query(collection(db, 'users', user.uid, 'quizzes'));
+      const exerciseSnapshot = await getDocs(exerciseQuery);
+      const exerciseCount = exerciseSnapshot.size;
+      
+      // Fetch verbal fluency stats
+      const verbalQuery = query(
+        collection(db, 'users', user.uid, 'verbalExercises'),
+        where('completed', '==', true)
+      );
+      const verbalSnapshot = await getDocs(verbalQuery);
+      const verbalCount = verbalSnapshot.size;
+      
+      // Fetch total verbal exercises from database
+      const verbalExercisesQuery = query(collection(db, 'verbalExercises'));
+      const verbalExercisesSnapshot = await getDocs(verbalExercisesQuery);
+      const totalVerbalExercises = verbalExercisesSnapshot.size;
+      
+      // Fetch recent activity
+      const activityQuery = query(
+        collection(db, 'users', user.uid, 'activity'),
+        orderBy('timestamp', 'desc'),
+        limit(5)
+      );
+      const activitySnapshot = await getDocs(activityQuery);
+      const activityList = activitySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // Set statistics en estado local
+      setReadingStats({ total: totalBooks, completed: readingCount });
+      setExerciseStats({ total: exerciseCount + totalBooks, completed: exerciseCount });
+      setVerbalsStats({ total: totalVerbalExercises, completed: verbalCount });
+      setRecentActivity(activityList);
+      
+      // Cargar medallas desde Firestore
+      try {
+        const medalsCollection = collection(db, 'users', user.uid, 'medals');
+        const medalsSnapshot = await getDocs(medalsCollection);
         
-        console.log("Medals found in Firestore:", firestoreMedals.length);
+        if (!medalsSnapshot.empty) {
+          const firestoreMedals = medalsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          // Solo actualizar el estado local, no el store global
+          setUserMedals(firestoreMedals);
+          console.log("Medals loaded from Firestore:", firestoreMedals.length);
+        } else {
+          // Si no hay medallas en Firestore, usar las del store
+          setUserMedals(medals);
+        }
+      } catch (error) {
+        console.error("Error fetching medals:", error);
+        // En caso de error, al menos usar las medallas del store
+        setUserMedals(medals);
       }
     } catch (error) {
-      console.error("Error fetching medals:", error);
+      console.error("Error in fetchFirestoreData:", error);
+      throw error;
     }
   };
   
   // Use local progress for guest users
   const fetchLocalData = () => {
+    // Usar el store actual sin modificarlo
+    const { readingProgress, exerciseProgress, verbalFluencyProgress } = useProgressStore.getState();
+    
     const readingCompleted = Object.keys(readingProgress).length;
     const exerciseCompleted = Object.keys(exerciseProgress).length;
     const verbalCompleted = Object.keys(verbalFluencyProgress).length;
@@ -162,7 +163,17 @@ const ProgressScreen = ({ navigation }) => {
     );
     
     setRecentActivity(combinedActivity.slice(0, 5));
+    
+    // Usar medallas del store para usuarios invitados
+    setUserMedals(medals);
   };
+  
+  // Actualizar medallas cuando cambien en el store
+  useEffect(() => {
+    if (isGuest || !user) {
+      setUserMedals(medals);
+    }
+  }, [medals, isGuest, user]);
   
   // Calculate overall progress percentage
   const totalActivities = readingStats.total + exerciseStats.total + verbalsStats.total;
@@ -424,7 +435,7 @@ return (
           <View style={styles.medalsSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Mis Logros</Text>
-              {medals.length > 3 && (
+              {userMedals.length > 3 && (
                 <TouchableOpacity 
                   onPress={() => setShowAllMedals(!showAllMedals)}
                   style={styles.seeMoreButton}  
@@ -436,7 +447,7 @@ return (
               )}
             </View>
             
-            {medals.length === 0 ? (
+            {userMedals.length === 0 ? (
               <View style={styles.emptyMedalsContainer}>
                 <Ionicons name="trophy" size={60} color={COLORS.textLight} style={{marginBottom: 16}} />
                 <Text style={styles.emptyMedalsText}>
@@ -444,7 +455,7 @@ return (
                 </Text>
                 <TouchableOpacity 
                   style={styles.startButton}
-                  onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
+                  onPress={() => navigation.navigate('MainTabs')}
                   activeOpacity={0.8}  
                 >
                   <Text style={styles.startButtonText}>Comenzar ahora</Text>
@@ -453,7 +464,7 @@ return (
               </View>
             ) : (
               <View>
-                {(showAllMedals ? medals : medals.slice(0, 3)).map((medal, index) => (
+                {(showAllMedals ? userMedals : userMedals.slice(0, 3)).map((medal, index) => (
                   <View key={medal.id || index} style={styles.medalItem}>
                     <LinearGradient
                       colors={getMedalGradient(medal.type)}
@@ -512,7 +523,7 @@ return (
                   <Ionicons name="trending-up" size={20} color={COLORS.warning} />
                 </View>
                 <Text style={[styles.weeklyStatValue, {color: COLORS.warning}]}>
-                  {medals.length}
+                  {userMedals.length}
                 </Text>
                 <Text style={styles.weeklyStatLabel}>Logros</Text>
               </View>
