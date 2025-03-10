@@ -1,5 +1,5 @@
 // src/screens/WelcomeScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TextInput, Alert, TouchableOpacity, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -15,8 +15,25 @@ const WelcomeScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const [greeting, setGreeting] = useState('Allin p\'unchay');
   const setGuestUser = useAuthStore(state => state.setGuestUser);
   const setUser = useAuthStore(state => state.setUser);
+
+  useEffect(() => {
+    // Determinar el saludo según la hora del día
+    const hour = new Date().getHours();
+    
+    if (hour >= 5 && hour < 12) {
+      // Buenos días - Mañana (5am - 11:59am)
+      setGreeting('Allin p\'unchay');
+    } else if (hour >= 12 && hour < 18) {
+      // Buenas tardes (12pm - 5:59pm)
+      setGreeting('Allin Sukhayay');
+    } else {
+      // Buenas noches (6pm - 4:59am)
+      setGreeting('Allin tuta');
+    }
+  }, []);
 
   const handleGuestAccess = () => {
     if (showGuestInput) {
@@ -68,7 +85,7 @@ const WelcomeScreen = ({ navigation }) => {
             />
           </View>
           
-          <Text style={styles.title}>¡Allin p'unchay!</Text>
+          <Text style={styles.title}>¡{greeting}!</Text>
           <Text style={styles.subtitle}>Aprende quechua de manera divertida e interactiva</Text>
           
           <View style={styles.actionContainer}>
@@ -160,10 +177,12 @@ const WelcomeScreen = ({ navigation }) => {
             )}
           </View>
           
-          <View style={styles.decoration}>
-            <Ionicons name="chatbubbles-outline" size={30} color="rgba(255,255,255,0.3)" />
-            <Ionicons name="book-outline" size={30} color="rgba(255,255,255,0.3)" style={{marginLeft: 20}} />
-            <Ionicons name="school-outline" size={30} color="rgba(255,255,255,0.3)" style={{marginLeft: 20}} />
+          <View style={styles.footerContainer}>
+            <View style={styles.decoration}>
+              <Ionicons name="chatbubbles-outline" size={20} color="rgba(255,255,255,0.3)" />
+              <Ionicons name="book-outline" size={20} color="rgba(255,255,255,0.3)" style={{marginLeft: 20}} />
+              <Ionicons name="school-outline" size={20} color="rgba(255,255,255,0.3)" style={{marginLeft: 20}} />
+            </View>
           </View>
         </View>
       </LinearGradient>
@@ -183,31 +202,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 30,
+    position: 'relative',
   },
   logoContainer: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    overflow: 'hidden',
     marginBottom: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   logo: {
-    width: '80%',
-    height: '80%',
+    width: 290,
+    height: 110,
   },
   title: {
-    fontSize: 36,
+    fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 12,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'white',
     opacity: 0.9,
     marginBottom: 40,
@@ -229,7 +242,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: 10,
   },
   input: {
     flex: 1,
@@ -278,7 +291,7 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     backgroundColor: COLORS.primary,
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 16,
     width: '100%',
@@ -301,10 +314,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textDecorationLine: 'underline',
   },
-  decoration: {
-    flexDirection: 'row',
+  footerContainer: {
     position: 'absolute',
     bottom: 30,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  decoration: {
+    flexDirection: 'row',
     justifyContent: 'center',
   }
 });

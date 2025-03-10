@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, Alert, ScrollView, TouchableOpacity, Switch, Image, ActivityIndicator, SafeAreaView } from 'react-native';
 import { updateProfile } from 'firebase/auth';
-import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import Header from '../components/Header';
 import Button from '../components/Button';
@@ -16,7 +16,7 @@ import { uploadImage } from '../services/cloudinary';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, isGuest, guestName, logout, setUser } = useAuthStore();
-  const { clearProgress } = useProgressStore();
+  const { readingProgress, exerciseProgress, verbalFluencyProgress, medals, clearProgress } = useProgressStore();
   
   const [name, setName] = useState(user?.displayName?.split(' ')[0] || guestName);
   const [lastName, setLastName] = useState(user?.displayName?.split(' ').slice(1).join(' ') || '');
@@ -51,31 +51,79 @@ const ProfileScreen = ({ navigation }) => {
             }
           }
           
-          // Cargar estadísticas del usuario
-          const statsDoc = await getDoc(doc(db, 'users', user.uid, 'stats', 'overview'));
-          if (statsDoc.exists()) {
-            const statsData = statsDoc.data();
-            setProfileStats({
-              booksRead: statsData.booksRead || 0,
-              exercisesCompleted: statsData.exercisesCompleted || 0,
-              totalMinutes: statsData.totalMinutes || 0
-            });
-          }
+          // Contar actividades de lectura completadas
+          const readingQuery = collection(db, 'users', user.uid, 'reading');
+          const readingSnapshot = await getDocs(readingQuery);
+          const readingCount = readingSnapshot.size;
+          
+          // Contar quizzes completados
+          const quizzesQuery = collection(db, 'users', user.uid, 'quizzes');
+          const quizzesSnapshot = await getDocs(quizzesQuery);
+          const quizzesCount = quizzesSnapshot.size;
+          
+          // Contar ejercicios verbales completados
+          const verbalQuery = collection(db, 'users', user.uid, 'verbalExercises');
+          const verbalSnapshot = await getDocs(verbalQuery);
+          const verbalCount = verbalSnapshot.size;
+          
+          // Actualizar estadísticas
+          const totalCompleted = readingCount + quizzesCount + verbalCount;
+          const estimatedMinutes = totalCompleted * 5; // Estimación básica de minutos
+          
+          setProfileStats({
+            booksRead: readingCount,
+            exercisesCompleted: quizzesCount + verbalCount,
+            totalMinutes: estimatedMinutes
+          });
+          
+          // Actualizar en Firestore
+          await setDoc(doc(db, 'users', user.uid, 'stats', 'overview'), {
+            booksRead: readingCount,
+            exercisesCompleted: quizzesCount + verbalCount,
+            totalMinutes: estimatedMinutes,
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
           
           // Cargar medallas del usuario
           const medalsQuery = await getDoc(doc(db, 'users', user.uid, 'stats', 'medals'));
           if (medalsQuery.exists()) {
-            setUserMedals(medalsQuery.data().count || 0);
-            setUserLevel(calculateUserLevel(medalsQuery.data().count || 0));
+            const medalCount = medalsQuery.data().count || medals.length;
+            setUserMedals(medalCount);
+            setUserLevel(calculateUserLevel(medalCount));
+          } else {
+            // Si no hay documento de medallas, usar las medallas locales
+            setUserMedals(medals.length);
+            setUserLevel(calculateUserLevel(medals.length));
+            
+            // Guardar conteo de medallas en Firestore
+            await setDoc(doc(db, 'users', user.uid, 'stats', 'medals'), {
+              count: medals.length,
+              updatedAt: new Date().toISOString()
+            }, { merge: true });
           }
         } catch (error) {
           console.error('Error loading profile data:', error);
         }
+      } else {
+        // Para modo invitado, usar datos locales
+        const readingCount = Object.keys(readingProgress).length;
+        const exerciseCount = Object.keys(exerciseProgress).length;
+        const verbalCount = Object.keys(verbalFluencyProgress).length;
+        const totalCompleted = readingCount + exerciseCount + verbalCount;
+        
+        setProfileStats({
+          booksRead: readingCount,
+          exercisesCompleted: exerciseCount + verbalCount,
+          totalMinutes: totalCompleted * 5 // Estimación básica de minutos
+        });
+        
+        setUserMedals(medals.length);
+        setUserLevel(calculateUserLevel(medals.length));
       }
     };
     
     loadProfileData();
-  }, [user, isGuest]);
+  }, [user, isGuest, readingProgress, exerciseProgress, verbalFluencyProgress, medals]);
   
   // Calcular nivel de usuario basado en medallas
   const calculateUserLevel = (medals) => {
@@ -378,7 +426,7 @@ const ProfileScreen = ({ navigation }) => {
                 await setDoc(doc(db, 'users', user.uid, 'stats', 'reset'), {
                   resetAt: new Date().toISOString(),
                   previousStats: profileStats
-                });
+                }, { merge: true });
                 
                 // Actualizar estadísticas
                 await setDoc(doc(db, 'users', user.uid, 'stats', 'overview'), {
@@ -386,7 +434,13 @@ const ProfileScreen = ({ navigation }) => {
                   exercisesCompleted: 0,
                   totalMinutes: 0,
                   resetAt: new Date().toISOString()
-                });
+                }, { merge: true });
+                
+                // Actualizar conteo de medallas
+                await setDoc(doc(db, 'users', user.uid, 'stats', 'medals'), {
+                  count: 0,
+                  resetAt: new Date().toISOString()
+                }, { merge: true });
                 
                 // Actualizar stats locales
                 setProfileStats({
@@ -671,12 +725,6 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 60,
-  },
   header: {
     paddingTop: 0,
     paddingBottom: 0,
@@ -710,6 +758,11 @@ const styles = StyleSheet.create({
     fontSize: 50,
     fontWeight: 'bold',
     color: 'white',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
   },
   editAvatarButton: {
     position: 'absolute',

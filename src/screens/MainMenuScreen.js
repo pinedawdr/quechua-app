@@ -369,7 +369,7 @@ const MainMenuScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   header: {
     paddingTop: 50,
-    paddingBottom: 50,
+    paddingBottom: 60,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     backgroundColor: COLORS.background,
-    marginTop: -30,
+    marginTop: -50,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
   },

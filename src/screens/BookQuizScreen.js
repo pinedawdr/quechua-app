@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   scoreValue: {
-    fontSize: a64,
+    fontSize: 34,
     fontWeight: 'bold',
     color: COLORS.primary,
   },

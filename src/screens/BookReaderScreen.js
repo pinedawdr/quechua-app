@@ -1,7 +1,7 @@
 // src/screens/BookReaderScreen.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView } from 'react-native';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import Header from '../components/Header';
 import Button from '../components/Button';
@@ -76,10 +76,13 @@ const BookReaderScreen = ({ route, navigation }) => {
     // Save to Firestore if user is logged in
     if (!isGuest && user) {
       try {
-        await updateDoc(doc(db, 'users', user.uid, 'reading', bookId), {
+        await setDoc(doc(db, 'users', user.uid, 'reading', bookId), {
           currentPage: pageNumber,
           lastRead: new Date().toISOString(),
-        });
+          totalPages: book?.pages?.length || 0,
+          title: book?.title || 'Libro sin título',
+          coverImage: book?.coverImage || null
+        }, { merge: true });
       } catch (error) {
         console.error('Error saving progress:', error);
       }

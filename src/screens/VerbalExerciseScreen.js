@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.secondary,
     borderRadius: 12,
     paddingVertical: 12,
-    paddingHorizontal: H20,
+    paddingHorizontal: 20,
     marginBottom: 20,
   },
   playButtonText: {

@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   headerContainer: {
-    padding: A20,
+    padding: 20,
     backgroundColor: COLORS.card,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
