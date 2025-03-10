@@ -1,6 +1,6 @@
-// src/screens/ProfileScreen.js (modificado con la función de foto de perfil)
+// src/screens/ProfileScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Alert, ScrollView, TouchableOpacity, Switch, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert, ScrollView, TouchableOpacity, Switch, Image, ActivityIndicator, SafeAreaView } from 'react-native';
 import { updateProfile } from 'firebase/auth';
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
@@ -451,27 +451,33 @@ const ProfileScreen = ({ navigation }) => {
         
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(74, 111, 255, 0.15)'}]}>
+            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(91, 134, 229, 0.15)'}]}>
               <Ionicons name="book" size={20} color={COLORS.primary} />
             </View>
-            <Text style={styles.statValue}>{profileStats.booksRead}</Text>
-            <Text style={styles.statLabel}>Libros</Text>
+            <View>
+              <Text style={styles.statValue}>{profileStats.booksRead}</Text>
+              <Text style={styles.statLabel}>Libros</Text>
+            </View>
           </View>
           
           <View style={styles.statItem}>
-            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(94, 96, 206, 0.15)'}]}>
+            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(124, 92, 239, 0.15)'}]}>
               <Ionicons name="checkmark-done" size={20} color={COLORS.accent} />
             </View>
-            <Text style={[styles.statValue, {color: COLORS.accent}]}>{profileStats.exercisesCompleted}</Text>
-            <Text style={styles.statLabel}>Ejercicios</Text>
+            <View>
+              <Text style={[styles.statValue, {color: COLORS.accent}]}>{profileStats.exercisesCompleted}</Text>
+              <Text style={styles.statLabel}>Ejercicios</Text>
+            </View>
           </View>
           
           <View style={styles.statItem}>
-            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(246, 173, 85, 0.15)'}]}>
+            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(255, 152, 0, 0.15)'}]}>
               <Ionicons name="time" size={20} color={COLORS.warning} />
             </View>
-            <Text style={[styles.statValue, {color: COLORS.warning}]}>{profileStats.totalMinutes}</Text>
-            <Text style={styles.statLabel}>Minutos</Text>
+            <View>
+              <Text style={[styles.statValue, {color: COLORS.warning}]}>{profileStats.totalMinutes}</Text>
+              <Text style={styles.statLabel}>Minutos</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -479,7 +485,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={globalStyles.container}>
+    <SafeAreaView style={globalStyles.container}>
       <LinearGradient
         colors={COLORS.gradient}
         start={{ x: 0, y: 0 }}
@@ -549,7 +555,7 @@ const ProfileScreen = ({ navigation }) => {
             
             <Text style={styles.label}>Nombre <Text style={styles.required}>*</Text></Text>
             <View style={styles.inputWrapper}>
-              <Ionicons name="person-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+              <Ionicons name="person" size={20} color={COLORS.primary} style={styles.inputIcon} />
               <TextInput 
                 style={styles.input}
                 value={name}
@@ -561,7 +567,7 @@ const ProfileScreen = ({ navigation }) => {
             
             <Text style={styles.label}>Apellidos</Text>
             <View style={styles.inputWrapper}>
-              <Ionicons name="people-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+              <Ionicons name="people" size={20} color={COLORS.primary} style={styles.inputIcon} />
               <TextInput 
                 style={[styles.input, !isGuest ? null : styles.disabledInput]}
                 value={lastName}
@@ -576,7 +582,7 @@ const ProfileScreen = ({ navigation }) => {
               <>
                 <Text style={styles.label}>Correo Electrónico</Text>
                 <View style={[styles.inputWrapper, styles.disabledInputWrapper]}>
-                  <Ionicons name="mail-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+                  <Ionicons name="mail" size={20} color={COLORS.textLight} style={styles.inputIcon} />
                   <TextInput 
                     style={[styles.input, styles.disabledInput]}
                     value={user?.email || ''}
@@ -589,7 +595,7 @@ const ProfileScreen = ({ navigation }) => {
             
             <Text style={styles.label}>Institución Educativa</Text>
             <View style={styles.inputWrapper}>
-              <Ionicons name="school-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+              <Ionicons name="school" size={20} color={COLORS.primary} style={styles.inputIcon} />
               <TextInput 
                 style={[styles.input, !isGuest ? null : styles.disabledInput]}
                 value={institution}
@@ -613,7 +619,7 @@ const ProfileScreen = ({ navigation }) => {
               
               <View style={styles.preferenceItem}>
                 <View style={styles.preferenceInfo}>
-                  <Ionicons name="notifications-outline" size={22} color={COLORS.primary} style={styles.preferenceIcon} />
+                  <Ionicons name="notifications" size={22} color={COLORS.primary} style={styles.preferenceIcon} />
                   <View>
                     <Text style={styles.preferenceTitle}>Notificaciones</Text>
                     <Text style={styles.preferenceDescription}>Recibir notificaciones de la app</Text>
@@ -634,6 +640,7 @@ const ProfileScreen = ({ navigation }) => {
             onPress={handleSaveChanges}
             disabled={saving}
             style={{ marginBottom: 20 }}
+            icon={<Ionicons name="save" size={22} color="white" />}
           />
           
           {!isGuest && (
@@ -641,7 +648,7 @@ const ProfileScreen = ({ navigation }) => {
               style={[styles.actionButton, styles.dangerButton]}
               onPress={handleResetProgress}
             >
-              <Ionicons name="refresh-outline" size={22} color={COLORS.error} />
+              <Ionicons name="refresh" size={22} color={COLORS.error} />
               <Text style={styles.dangerButtonText}>Restablecer Progreso</Text>
             </TouchableOpacity>
           )}
@@ -650,7 +657,7 @@ const ProfileScreen = ({ navigation }) => {
             style={styles.actionButton}
             onPress={handleLogout}
           >
-            <Ionicons name="log-out-outline" size={22} color={COLORS.textLight} />
+            <Ionicons name="log-out" size={22} color={COLORS.textLight} />
             <Text style={styles.actionButtonText}>Cerrar Sesión</Text>
           </TouchableOpacity>
           
@@ -659,7 +666,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -668,7 +675,7 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 50,
+    borderRadius: 60,
   },
   header: {
     paddingTop: 0,
@@ -680,6 +687,7 @@ const styles = StyleSheet.create({
   },
   contentInner: {
     padding: 20,
+    paddingBottom: 40,
   },
   profileHeader: {
     alignItems: 'center',
@@ -687,17 +695,19 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
     position: 'relative',
+    borderWidth: 4,
+    borderColor: 'white',
   },
   avatarLetter: {
-    fontSize: 40,
+    fontSize: 50,
     fontWeight: 'bold',
     color: 'white',
   },
@@ -706,23 +716,23 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     backgroundColor: COLORS.accent,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
     borderColor: 'white',
   },
   profileName: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text,
     marginBottom: 8,
   },
   profileBadge: {
-    paddingVertical: 5,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
     borderRadius: 20,
     marginTop: 5,
   },
@@ -734,7 +744,7 @@ const styles = StyleSheet.create({
   },
   profileBadgeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
   levelContainer: {
@@ -742,15 +752,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 25,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   levelHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   levelTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
   },
@@ -760,19 +772,21 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   levelBarContainer: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   levelBar: {
-    height: 8,
+    height: 10,
     backgroundColor: '#F0F0F5',
-    borderRadius: 4,
+    borderRadius: 5,
     overflow: 'hidden',
-    marginBottom: 5,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   levelBarFill: {
     height: '100%',
     backgroundColor: COLORS.primary,
-    borderRadius: 4,
+    borderRadius: 5,
   },
   levelMarkers: {
     flexDirection: 'row',
@@ -786,33 +800,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textLight,
     textAlign: 'center',
+    lineHeight: 20,
   },
   statsContainer: {
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     marginBottom: 25,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   statsHeader: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   statsSectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
   },
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
   },
   statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -822,6 +839,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.primary,
     marginBottom: 4,
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 12,
@@ -833,18 +851,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 15,
+    marginBottom: 16,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 5,
+    marginBottom: 8,
     color: COLORS.text,
+  },
+  required: {
+    color: COLORS.error,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -853,20 +876,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: 15,
+    marginBottom: 16,
     paddingHorizontal: 12,
   },
   disabledInputWrapper: {
     backgroundColor: '#F0F0F5',
   },
   inputIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   input: {
     flex: 1,
     paddingVertical: 14,
     color: COLORS.text,
-    fontSize: 15,
+    fontSize: 16,
   },
   disabledInput: {
     backgroundColor: '#F0F0F5',
@@ -877,6 +900,7 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     marginTop: 5,
     marginBottom: 10,
+    lineHeight: 20,
   },
   preferenceItem: {
     flexDirection: 'row',
@@ -904,12 +928,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textLight,
   },
-actionButton: {
+  actionButton: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 15,
-    marginBottom: 15,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 12,
@@ -921,8 +945,8 @@ actionButton: {
     marginLeft: 10,
   },
   dangerButton: {
-    borderColor: 'rgba(245, 101, 101, 0.2)',
-    backgroundColor: 'rgba(245, 101, 101, 0.05)',
+    borderColor: 'rgba(244, 67, 54, 0.2)',
+    backgroundColor: 'rgba(244, 67, 54, 0.05)',
   },
   dangerButtonText: {
     fontSize: 16,
@@ -937,9 +961,6 @@ actionButton: {
   versionText: {
     fontSize: 12,
     color: COLORS.textLight,
-  },
-  required: {
-    color: COLORS.error,
   }
 });
 

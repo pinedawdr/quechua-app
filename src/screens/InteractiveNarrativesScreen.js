@@ -1,6 +1,6 @@
 // src/screens/InteractiveNarrativesScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ScrollView, SafeAreaView } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import Header from '../components/Header';
@@ -42,10 +42,10 @@ const InteractiveNarrativesScreen = ({ navigation }) => {
   };
 
   const categories = [
-    { id: 'all', name: 'Todas' },
-    { id: 'adventure', name: 'Aventura' },
-    { id: 'culture', name: 'Cultura' },
-    { id: 'daily', name: 'Cotidiano' }
+    { id: 'all', name: 'Todas', icon: 'apps' },
+    { id: 'adventure', name: 'Aventura', icon: 'compass' },
+    { id: 'culture', name: 'Cultura', icon: 'earth' },
+    { id: 'daily', name: 'Cotidiano', icon: 'home' }
   ];
 
   const filteredNarratives = selectedCategory === 'all' 
@@ -57,7 +57,7 @@ const InteractiveNarrativesScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={globalStyles.container}>
+    <SafeAreaView style={globalStyles.container}>
       <LinearGradient
         colors={COLORS.gradient}
         start={{ x: 0, y: 0 }}
@@ -73,7 +73,7 @@ const InteractiveNarrativesScreen = ({ navigation }) => {
       
       {error ? (
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={50} color={COLORS.error} />
+          <Ionicons name="alert-circle" size={60} color={COLORS.error} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : (
@@ -96,6 +96,12 @@ const InteractiveNarrativesScreen = ({ navigation }) => {
                   ]}
                   onPress={() => setSelectedCategory(category.id)}
                 >
+                  <Ionicons 
+                    name={category.icon} 
+                    size={16} 
+                    color={selectedCategory === category.id ? 'white' : COLORS.textLight} 
+                    style={styles.categoryIcon}
+                  />
                   <Text style={[
                     styles.categoryText,
                     selectedCategory === category.id && styles.activeCategoryText
@@ -109,14 +115,14 @@ const InteractiveNarrativesScreen = ({ navigation }) => {
           
           {narratives.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="book-outline" size={50} color={COLORS.textLight} />
+              <Ionicons name="book" size={60} color={COLORS.textLight} />
               <Text style={styles.emptyText}>
                 No hay narrativas disponibles en este momento. Vuelve más tarde.
               </Text>
             </View>
           ) : filteredNarratives.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="filter-outline" size={50} color={COLORS.textLight} />
+              <Ionicons name="filter" size={60} color={COLORS.textLight} />
               <Text style={styles.emptyText}>
                 No hay narrativas disponibles en esta categoría. Prueba con otra.
               </Text>
@@ -153,14 +159,14 @@ const InteractiveNarrativesScreen = ({ navigation }) => {
                       
                       <View style={styles.narrativeMetadata}>
                         <View style={styles.metadataItem}>
-                          <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.8)" />
+                          <Ionicons name="time" size={14} color="rgba(255,255,255,0.8)" />
                           <Text style={styles.metadataText}>
                             {item.duration || '10-15'} min
                           </Text>
                         </View>
                         
                         <View style={styles.metadataItem}>
-                          <Ionicons name="git-branch-outline" size={14} color="rgba(255,255,255,0.8)" />
+                          <Ionicons name="git-branch" size={14} color="rgba(255,255,255,0.8)" />
                           <Text style={styles.metadataText}>
                             {item.choices || 'Múltiples'} decisiones
                           </Text>
@@ -179,7 +185,7 @@ const InteractiveNarrativesScreen = ({ navigation }) => {
           )}
         </>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -209,31 +215,35 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   description: {
     fontSize: 14,
     color: COLORS.textLight,
     lineHeight: 20,
-    marginBottom: 15,
+    marginBottom: 20,
   },
   categoriesContainer: {
     flexDirection: 'row',
-    marginTop: 10,
     flexWrap: 'wrap',
   },
   categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 16,
     backgroundColor: COLORS.background,
-    marginRight: 8,
+    marginRight: 10,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
+  },
+  categoryIcon: {
+    marginRight: 6,
   },
   activeCategoryButton: {
     backgroundColor: COLORS.primary,
@@ -252,11 +262,13 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   narrativeCard: {
-    height: 220,
+    height: 240,
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 20,
     backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   narrativeImage: {
     width: '100%',
@@ -269,18 +281,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: '70%',
     justifyContent: 'flex-end',
-    padding: 15,
+    padding: 20,
   },
   narrativeContent: {
     width: '100%',
   },
   categoryBadge: {
     backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     alignSelf: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   categoryBadgeText: {
     color: 'white',
@@ -291,37 +303,41 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   narrativeDescription: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 12,
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 16,
     lineHeight: 20,
   },
   narrativeMetadata: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
   },
   metadataItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 16,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
   metadataText: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     marginLeft: 5,
   },
   startButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: COLORS.primary,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 20,
+    borderRadius: 16,
     alignSelf: 'flex-start',
-    marginTop: 12,
   },
   startButtonText: {
     color: 'white',
@@ -340,6 +356,7 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     textAlign: 'center',
     marginTop: 15,
+    lineHeight: 24,
   },
   emptyContainer: {
     flex: 1,
@@ -351,7 +368,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textLight,
     textAlign: 'center',
-    marginTop: 15,
+    marginTop: 16,
+    lineHeight: 24,
+    maxWidth: '80%',
   },
 });
 

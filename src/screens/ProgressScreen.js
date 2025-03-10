@@ -1,6 +1,6 @@
 // src/screens/ProgressScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
 import { collection, query, where, getDocs, doc, getDoc, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import useProgressStore from '../store/progressStore';
@@ -184,13 +184,13 @@ const ProgressScreen = ({ navigation }) => {
  const getActivityColor = (type) => {
   switch(type) {
     case 'reading':
-      return ['#4A6FFF', '#36D1DC'];
+      return ['#5B86E5', '#36D1DC'];
     case 'exercise':
-      return ['#5E60CE', '#6A67CE'];
+      return ['#7C5CEF', '#5B86E5'];
     case 'verbal':
       return ['#36D1DC', '#5B86E5'];
     case 'narrative':
-      return ['#F6AD55', '#F69A55'];
+      return ['#FF9E80', '#FF6E40'];
     default:
       return COLORS.gradient;
   }
@@ -235,7 +235,7 @@ const renderActivityItem = (item, index) => {
 };
 
 return (
-  <View style={globalStyles.container}>
+  <SafeAreaView style={globalStyles.container}>
     <LinearGradient
       colors={COLORS.gradient}
       start={{ x: 0, y: 0 }}
@@ -263,233 +263,236 @@ return (
       </View>
     </LinearGradient>
     
-    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.contentInner}>
-        <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>Actividades</Text>
+    <ScrollView 
+      style={styles.content} 
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.contentScrollContainer}
+    >
+      <View style={styles.statsSection}>
+        <Text style={styles.sectionTitle}>Actividades</Text>
+        
+        <TouchableOpacity 
+          style={styles.activityCard}
+          onPress={() => navigateToActivity('reading')}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={['#5B86E5', '#36D1DC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.activityIconContainer}
+          >
+            <Ionicons name="book" size={24} color="white" />
+          </LinearGradient>
+          <View style={styles.activityInfo}>
+            <Text style={styles.activityTitle}>Lecturas</Text>
+            <View style={styles.activityProgressContainer}>
+              <View style={styles.activityProgressBar}>
+                <View 
+                  style={[
+                    styles.activityProgressFill, 
+                    { 
+                      width: `${Math.max(1, (readingStats.completed / Math.max(1, readingStats.total)) * 100)}%`,
+                      backgroundColor: '#5B86E5'
+                    }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.activityProgressText}>
+                {readingStats.completed}/{readingStats.total}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.activityCard}
+          onPress={() => navigateToActivity('reading')}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={['#7C5CEF', '#5B86E5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.activityIconContainer}
+          >
+            <Ionicons name="document-text" size={24} color="white" />
+          </LinearGradient>
+          <View style={styles.activityInfo}>
+            <Text style={styles.activityTitle}>Comprensión</Text>
+            <View style={styles.activityProgressContainer}>
+              <View style={styles.activityProgressBar}>
+                <View 
+                  style={[
+                    styles.activityProgressFill, 
+                    { 
+                      width: `${Math.max(1, (exerciseStats.completed / Math.max(1, exerciseStats.total)) * 100)}%`,
+                      backgroundColor: '#7C5CEF'
+                    }
+                  ]}
+                />
+              </View>
+              <Text style={styles.activityProgressText}>
+                {exerciseStats.completed}/{exerciseStats.total}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.activityCard}
+          onPress={() => navigateToActivity('verbal')}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={['#36D1DC', '#5B86E5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.activityIconContainer}
+          >
+            <Ionicons name="mic" size={24} color="white" />
+          </LinearGradient>
+          <View style={styles.activityInfo}>
+            <Text style={styles.activityTitle}>Fluidez Verbal</Text>
+            <View style={styles.activityProgressContainer}>
+              <View style={styles.activityProgressBar}>
+                <View 
+                  style={[
+                    styles.activityProgressFill, 
+                    { 
+                      width: `${Math.max(1, (verbalsStats.completed / Math.max(1, verbalsStats.total)) * 100)}%`,
+                      backgroundColor: '#36D1DC'
+                    }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.activityProgressText}>
+                {verbalsStats.completed}/{verbalsStats.total}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+      
+      {recentActivity.length > 0 && (
+        <View style={styles.recentActivitySection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Actividad Reciente</Text>
+          </View>
+          
+          {recentActivity.map((item, index) => renderActivityItem(item, index))}
           
           <TouchableOpacity 
-            style={styles.activityCard}
-            onPress={() => navigateToActivity('reading')}
-            activeOpacity={0.9}
+            style={styles.viewAllButton}
+            onPress={() => {
+              // Aquí podríamos navegar a una pantalla con historial completo
+              Alert.alert('Próximamente', 'El historial completo estará disponible en próximas versiones.');
+            }}
+            activeOpacity={0.8}
           >
-            <LinearGradient
-              colors={['#4A6FFF', '#36D1DC']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.activityIconContainer}
-            >
-              <Ionicons name="book" size={24} color="white" />
-            </LinearGradient>
-            <View style={styles.activityInfo}>
-              <Text style={styles.activityTitle}>Lecturas</Text>
-              <View style={styles.activityProgressContainer}>
-                <View style={styles.activityProgressBar}>
-                  <View 
-                    style={[
-                      styles.activityProgressFill, 
-                      { 
-                        width: `${Math.max(1, (readingStats.completed / Math.max(1, readingStats.total)) * 100)}%`,
-                        backgroundColor: '#4A6FFF'
-                      }
-                    ]} 
-                  />
-                </View>
-                <Text style={styles.activityProgressText}>
-                  {readingStats.completed}/{readingStats.total}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.activityCard}
-            onPress={() => navigateToActivity('reading')}
-            activeOpacity={0.9}
-          >
-            <LinearGradient
-              colors={['#5E60CE', '#6A67CE']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.activityIconContainer}
-            >
-              <Ionicons name="document-text" size={24} color="white" />
-            </LinearGradient>
-            <View style={styles.activityInfo}>
-              <Text style={styles.activityTitle}>Comprensión</Text>
-              <View style={styles.activityProgressContainer}>
-                <View style={styles.activityProgressBar}>
-                  <View 
-                    style={[
-                      styles.activityProgressFill, 
-                      { 
-                        width: `${Math.max(1, (exerciseStats.completed / Math.max(1, exerciseStats.total)) * 100)}%`,
-                        backgroundColor: '#5E60CE'
-                      }
-                    ]}
-                    />
-                </View>
-                <Text style={styles.activityProgressText}>
-                  {exerciseStats.completed}/{exerciseStats.total}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.activityCard}
-            onPress={() => navigateToActivity('verbal')}
-            activeOpacity={0.9}
-          >
-            <LinearGradient
-              colors={['#36D1DC', '#5B86E5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.activityIconContainer}
-            >
-              <Ionicons name="mic" size={24} color="white" />
-            </LinearGradient>
-            <View style={styles.activityInfo}>
-              <Text style={styles.activityTitle}>Fluidez Verbal</Text>
-              <View style={styles.activityProgressContainer}>
-                <View style={styles.activityProgressBar}>
-                  <View 
-                    style={[
-                      styles.activityProgressFill, 
-                      { 
-                        width: `${Math.max(1, (verbalsStats.completed / Math.max(1, verbalsStats.total)) * 100)}%`,
-                        backgroundColor: '#36D1DC'
-                      }
-                    ]} 
-                  />
-                </View>
-                <Text style={styles.activityProgressText}>
-                  {verbalsStats.completed}/{verbalsStats.total}
-                </Text>
-              </View>
-            </View>
+            <Text style={styles.viewAllText}>Ver todo el historial</Text>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
-        
-        {recentActivity.length > 0 && (
-          <View style={styles.recentActivitySection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Actividad Reciente</Text>
-            </View>
-            
-            {recentActivity.map((item, index) => renderActivityItem(item, index))}
-            
+      )}
+      
+      <View style={styles.medalsSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Mis Logros</Text>
+          {medals.length > 3 && (
             <TouchableOpacity 
-              style={styles.viewAllButton}
-              onPress={() => {
-                // Aquí podríamos navegar a una pantalla con historial completo
-                Alert.alert('Próximamente', 'El historial completo estará disponible en próximas versiones.');
-              }}
-              activeOpacity={0.8}
+              onPress={() => setShowAllMedals(!showAllMedals)}
+              style={styles.seeMoreButton}  
             >
-              <Text style={styles.viewAllText}>Ver todo el historial</Text>
-              <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
-            </TouchableOpacity>
-          </View>
-        )}
-        
-        <View style={styles.medalsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Mis Logros</Text>
-            {medals.length > 3 && (
-              <TouchableOpacity onPress={() => setShowAllMedals(!showAllMedals)}>
-                <Text style={styles.seeMoreText}>
-                  {showAllMedals ? 'Ver menos' : 'Ver todos'}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          
-          {medals.length === 0 ? (
-            <TouchableOpacity 
-              style={styles.emptyMedalsContainer}
-              onPress={() => navigation.navigate('Main')}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="trophy-outline" size={80} color={COLORS.textLight} style={{marginBottom: 15}} />
-              <Text style={styles.emptyMedalsText}>
-                ¡Completa actividades para ganar medallas!
+              <Text style={styles.seeMoreText}>
+                {showAllMedals ? 'Ver menos' : 'Ver todos'}
               </Text>
-              <View style={styles.startButton}>
-                <Text style={styles.startButtonText}>Comenzar ahora</Text>
-                <Ionicons name="arrow-forward" size={16} color={COLORS.primary} />
-              </View>
             </TouchableOpacity>
-          ) : (
-            (showAllMedals ? medals : medals.slice(0, 3)).map((medal, index) => (
-              <View key={index} style={styles.medalItem}>
-                <LinearGradient
-                  colors={getMedalGradient(medal.type)}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.medalIconContainer}
-                >
-                  {getMedalIcon(medal.type)}
-                </LinearGradient>
-                <View style={styles.medalInfo}>
-                  <Text style={styles.medalTitle}>{medal.title}</Text>
-                  <Text style={styles.medalDescription}>{medal.description}</Text>
-                  <Text style={styles.medalDate}>
-                    {new Date(medal.date).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </Text>
-                </View>
-              </View>
-            ))
           )}
         </View>
         
-        <View style={styles.weeklyStatsContainer}>
-          <Text style={styles.sectionTitle}>Esta semana</Text>
-          <View style={styles.weeklyStatsCard}>
-            <View style={styles.weeklyStatItem}>
-              <View style={[styles.statIconContainer, {backgroundColor: 'rgba(74, 111, 255, 0.15)'}]}>
-                <Ionicons name="time" size={20} color={COLORS.primary} />
+        {medals.length === 0 ? (
+          <View style={styles.emptyMedalsContainer}>
+            <Ionicons name="trophy" size={60} color={COLORS.textLight} style={{marginBottom: 16}} />
+            <Text style={styles.emptyMedalsText}>
+              ¡Completa actividades para ganar medallas!
+            </Text>
+            <TouchableOpacity 
+              style={styles.startButton}
+              onPress={() => navigation.navigate('MainTabs')}
+              activeOpacity={0.8}  
+            >
+              <Text style={styles.startButtonText}>Comenzar ahora</Text>
+              <Ionicons name="arrow-forward" size={16} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          (showAllMedals ? medals : medals.slice(0, 3)).map((medal, index) => (
+            <View key={index} style={styles.medalItem}>
+              <LinearGradient
+                colors={getMedalGradient(medal.type)}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.medalIconContainer}
+              >
+                {getMedalIcon(medal.type)}
+              </LinearGradient>
+              <View style={styles.medalInfo}>
+                <Text style={styles.medalTitle}>{medal.title}</Text>
+                <Text style={styles.medalDescription}>{medal.description}</Text>
+                <Text style={styles.medalDate}>
+                  {new Date(medal.date).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </Text>
               </View>
-              <Text style={styles.weeklyStatValue}>
-                {(readingStats.completed + exerciseStats.completed) * 5} min
-              </Text>
-              <Text style={styles.weeklyStatLabel}>Tiempo total</Text>
             </View>
-            
-            <View style={styles.statDivider} />
-            
-            <View style={styles.weeklyStatItem}>
-              <View style={[styles.statIconContainer, {backgroundColor: 'rgba(94, 96, 206, 0.15)'}]}>
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.accent} />
-              </View>
-              <Text style={[styles.weeklyStatValue, {color: COLORS.accent}]}>
-                {completedActivities}
-              </Text>
-              <Text style={styles.weeklyStatLabel}>Completados</Text>
+          ))
+        )}
+      </View>
+      
+      <View style={styles.weeklyStatsContainer}>
+        <Text style={styles.sectionTitle}>Esta semana</Text>
+        <View style={styles.weeklyStatsCard}>
+          <View style={styles.weeklyStatItem}>
+            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(91, 134, 229, 0.15)'}]}>
+              <Ionicons name="time" size={20} color={COLORS.primary} />
             </View>
-            
-            <View style={styles.statDivider} />
-            
-            <View style={styles.weeklyStatItem}>
-              <View style={[styles.statIconContainer, {backgroundColor: 'rgba(246, 173, 85, 0.15)'}]}>
-                <Ionicons name="trending-up" size={20} color={COLORS.warning} />
-              </View>
-              <Text style={[styles.weeklyStatValue, {color: COLORS.warning}]}>
-                {medals.length}
-              </Text>
-              <Text style={styles.weeklyStatLabel}>Logros</Text>
+            <Text style={styles.weeklyStatValue}>
+              {(readingStats.completed + exerciseStats.completed) * 5} min
+            </Text>
+            <Text style={styles.weeklyStatLabel}>Tiempo total</Text>
+          </View>
+          
+          <View style={styles.statDivider} />
+          
+          <View style={styles.weeklyStatItem}>
+            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(124, 92, 239, 0.15)'}]}>
+              <Ionicons name="checkmark-circle" size={20} color={COLORS.accent} />
             </View>
+            <Text style={[styles.weeklyStatValue, {color: COLORS.accent}]}>
+              {completedActivities}
+            </Text>
+            <Text style={styles.weeklyStatLabel}>Completados</Text>
+          </View>
+          
+          <View style={styles.statDivider} />
+          
+          <View style={styles.weeklyStatItem}>
+            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(255, 152, 0, 0.15)'}]}>
+              <Ionicons name="trending-up" size={20} color={COLORS.warning} />
+            </View>
+            <Text style={[styles.weeklyStatValue, {color: COLORS.warning}]}>
+              {medals.length}
+            </Text>
+            <Text style={styles.weeklyStatLabel}>Logros</Text>
           </View>
         </View>
-        
-        <View style={styles.footer}></View>
       </View>
     </ScrollView>
-  </View>
+  </SafeAreaView>
 );
 };
 
@@ -497,13 +500,13 @@ return (
 const getMedalGradient = (type) => {
 switch(type) {
   case 'quiz':
-    return ['#4A6FFF', '#36D1DC'];
+    return ['#5B86E5', '#36D1DC'];
   case 'verbal':
-    return ['#5E60CE', '#6A67CE'];
+    return ['#7C5CEF', '#5B86E5'];
   case 'narrative':
     return ['#36D1DC', '#5B86E5'];
   default:
-    return ['#F6AD55', '#F69A55'];
+    return ['#FF9E80', '#FF6E40'];
 }
 };
 
@@ -522,299 +525,322 @@ switch(type) {
 };
 
 const styles = StyleSheet.create({
-header: {
-  paddingTop: 60,
-  paddingBottom: 80,
-  borderBottomLeftRadius: 0,
-  borderBottomRightRadius: 0,
-},
-headerContent: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingHorizontal: 20,
-},
-headerTitle: {
-  fontSize: 24,
-  fontWeight: 'bold',
-  color: 'white',
-},
-avatarContainer: {
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-avatarText: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  color: 'white',
-},
-progressCircleWrapper: {
-  alignItems: 'center',
-  marginTop: 20,
-},
-progressCircle: {
-  width: 120,
-  height: 120,
-  borderRadius: 60,
-  backgroundColor: 'white',
-  justifyContent: 'center',
-  alignItems: 'center',
-  borderWidth: 8,
-  borderColor: 'rgba(255, 255, 255, 0.3)',
-},
-progressPercentage: {
-  fontSize: 30,
-  fontWeight: 'bold',
-  color: COLORS.primary,
-},
-progressLabel: {
-  fontSize: 14,
-  color: COLORS.textLight,
-},
-content: {
-  flex: 1,
-  backgroundColor: COLORS.background,
-  marginTop: -50,
-  borderTopLeftRadius: 30,
-  borderTopRightRadius: 30,
-},
-contentInner: {
-  padding: 20,
-  paddingTop: 40,
-},
-sectionHeader: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: 15,
-},
-statsSection: {
-  marginBottom: 25,
-},
-sectionTitle: {
-  fontSize: 20,
-  fontWeight: 'bold',
-  color: COLORS.text,
-  marginBottom: 15,
-},
-seeMoreText: {
-  fontSize: 14,
-  color: COLORS.primary,
-  fontWeight: '600',
-},
-activityCard: {
-  backgroundColor: 'white',
-  borderRadius: 16,
-  padding: 15,
-  marginBottom: 15,
-  flexDirection: 'row',
-  alignItems: 'center',
-},
-activityIconContainer: {
-  width: 50,
-  height: 50,
-  borderRadius: 15,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginRight: 15,
-},
-activityInfo: {
-  flex: 1,
-},
-activityTitle: {
-  fontSize: 16,
-  fontWeight: '600',
-  color: COLORS.text,
-  marginBottom: 8,
-},
-activityProgressContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-},
-activityProgressBar: {
-  flex: 1,
-  height: 8,
-  backgroundColor: '#F0F0F5',
-  borderRadius: 4,
-  overflow: 'hidden',
-  marginRight: 10,
-},
-activityProgressFill: {
-  height: '100%',
-  borderRadius: 4,
-},
-activityProgressText: {
-  fontSize: 14,
-  fontWeight: 'bold',
-  color: COLORS.textLight,
-  minWidth: 40,
-  textAlign: 'right',
-},
-recentActivitySection: {
-  marginBottom: 25,
-},
-activityItem: {
-  backgroundColor: 'white',
-  borderRadius: 16,
-  padding: 15,
-  marginBottom: 10,
-  flexDirection: 'row',
-  alignItems: 'center',
-},
-activityItemIcon: {
-  width: 44,
-  height: 44,
-  borderRadius: 12,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginRight: 15,
-},
-activityItemContent: {
-  flex: 1,
-},
-activityItemTitle: {
-  fontSize: 16,
-  fontWeight: '600',
-  color: COLORS.text,
-  marginBottom: 4,
-},
-activityItemDate: {
-  fontSize: 14,
-  color: COLORS.textLight,
-},
-activityItemScoreContainer: {
-  backgroundColor: 'rgba(74, 111, 255, 0.1)',
-  paddingHorizontal: 10,
-  paddingVertical: 5,
-  borderRadius: 12,
-},
-activityItemScore: {
-  fontSize: 14,
-  fontWeight: 'bold',
-  color: COLORS.primary,
-},
-viewAllButton: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 12,
-  marginTop: 5,
-},
-viewAllText: {
-  fontSize: 14,
-  color: COLORS.primary,
-  fontWeight: '600',
-  marginRight: 4,
-},
-medalsSection: {
-  marginBottom: 25,
-},
-emptyMedalsContainer: {
-  backgroundColor: 'white',
-  borderRadius: 16,
-  padding: 30,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-emptyMedalsText: {
-  fontSize: 16,
-  color: COLORS.textLight,
-  textAlign: 'center',
-  marginBottom: 15,
-},
-startButton: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 8,
-},
-startButtonText: {
-  fontSize: 14,
-  color: COLORS.primary,
-  fontWeight: '600',
-  marginRight: 4,
-},
-medalItem: {
-  flexDirection: 'row',
-  backgroundColor: 'white',
-  borderRadius: 16,
-  padding: 15,
-  marginBottom: 15,
-},
-medalIconContainer: {
-  width: 50,
-  height: 50,
-  borderRadius: 15,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginRight: 15,
-},
-medalInfo: {
-  flex: 1,
-},
-medalTitle: {
-  fontSize: 16,
-  fontWeight: 'bold',
-  color: COLORS.text,
-  marginBottom: 4,
-},
-medalDescription: {
-  fontSize: 14,
-  color: COLORS.textLight,
-  marginBottom: 6,
-},
-medalDate: {
-  fontSize: 12,
-  color: COLORS.textLight,
-  fontStyle: 'italic',
-},
-weeklyStatsContainer: {
-  marginBottom: 30,
-},
-weeklyStatsCard: {
-  backgroundColor: 'white',
-  borderRadius: 16,
-  padding: 20,
-  marginTop: 15,
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-},
-weeklyStatItem: {
-  flex: 1,
-  alignItems: 'center',
-},
-statIconContainer: {
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginBottom: 8,
-},
-weeklyStatValue: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  color: COLORS.primary,
-  marginBottom: 4,
-},
-weeklyStatLabel: {
-  fontSize: 12,
-  color: COLORS.textLight,
-  textAlign: 'center',
-},
-statDivider: {
-  width: 1,
-  height: '80%',
-  backgroundColor: COLORS.border,
-  alignSelf: 'center',
-},
-footer: {
-  height: 50,
-}
+  header: {
+    paddingTop: 50,
+    paddingBottom: 70,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  progressCircleWrapper: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  progressCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 8,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  progressPercentage: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  progressLabel: {
+    fontSize: 14,
+    color: COLORS.textLight,
+  },
+  content: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    marginTop: -40,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+  },
+  contentScrollContainer: {
+    padding: 20,
+    paddingTop: 30,
+    paddingBottom: 50,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  statsSection: {
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 16,
+  },
+  seeMoreButton: {
+    backgroundColor: 'rgba(91, 134, 229, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  seeMoreText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  activityCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  activityIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 10,
+  },
+  activityProgressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  activityProgressBar: {
+    flex: 1,
+    height: 10,
+    backgroundColor: COLORS.background,
+    borderRadius: 5,
+    overflow: 'hidden',
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  activityProgressFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  activityProgressText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: COLORS.textLight,
+    minWidth: 45,
+    textAlign: 'right',
+  },
+  recentActivitySection: {
+    marginBottom: 30,
+  },
+  activityItem: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  activityItemIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  activityItemContent: {
+    flex: 1,
+  },
+  activityItemTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  activityItemDate: {
+    fontSize: 14,
+    color: COLORS.textLight,
+  },
+  activityItemScoreContainer: {
+    backgroundColor: 'rgba(91, 134, 229, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  activityItemScore: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    marginTop: 5,
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
+    marginRight: 4,
+  },
+  medalsSection: {
+    marginBottom: 30,
+  },
+  emptyMedalsContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  emptyMedalsText: {
+    fontSize: 16,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 24,
+  },
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    backgroundColor: 'rgba(91, 134, 229, 0.1)',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+  },
+  startButtonText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
+    marginRight: 4,
+  },
+  medalItem: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  medalIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  medalInfo: {
+    flex: 1,
+  },
+  medalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  medalDescription: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  medalDate: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    fontStyle: 'italic',
+  },
+  weeklyStatsContainer: {
+    marginBottom: 30,
+  },
+  weeklyStatsCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  weeklyStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  weeklyStatValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 4,
+  },
+  weeklyStatLabel: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    textAlign: 'center',
+  },
+  statDivider: {
+    width: 1,
+    height: '80%',
+    backgroundColor: COLORS.border,
+    alignSelf: 'center',
+  }
 });
 
 export default ProgressScreen;

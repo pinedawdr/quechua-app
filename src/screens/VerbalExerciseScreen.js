@@ -1,6 +1,6 @@
 // src/screens/VerbalExerciseScreen.js
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, SafeAreaView } from 'react-native';
 import { Audio } from 'expo-av';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -78,7 +78,7 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
         return;
       }
       
-      // Configurar el modo de audio - CORREGIDO CON VALORES DIRECTOS
+      // Configurar el modo de audio
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
@@ -174,7 +174,6 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
       Alert.alert('Error', 'No se pudo cargar la grabación: ' + error.message);
     }
   };
-  
   const playRecording = async () => {
     if (!sound) return;
     
@@ -319,7 +318,7 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
   
   if (error || !exercise) {
     return (
-      <View style={globalStyles.container}>
+      <SafeAreaView style={globalStyles.container}>
         <LinearGradient
           colors={COLORS.gradient}
           start={{ x: 0, y: 0 }}
@@ -333,7 +332,7 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
           />
         </LinearGradient>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={50} color={COLORS.error} />
+          <Ionicons name="alert-circle" size={60} color={COLORS.error} />
           <Text style={styles.errorText}>
             {error || 'No se encontró el ejercicio. Por favor, intenta con otro ejercicio.'}
           </Text>
@@ -343,13 +342,13 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
             style={{ marginTop: 20 }}
           />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
   
   if (completed) {
     return (
-      <View style={globalStyles.container}>
+      <SafeAreaView style={globalStyles.container}>
         <LinearGradient
           colors={COLORS.gradient}
           start={{ x: 0, y: 0 }}
@@ -363,7 +362,14 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
         </LinearGradient>
         
         <View style={styles.completedContainer}>
-          <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
+          <LinearGradient
+            colors={['#5B86E5', '#36D1DC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.successIconCircle}
+          >
+            <Ionicons name="checkmark" size={60} color="white" />
+          </LinearGradient>
           <Text style={styles.completedTitle}>¡Excelente trabajo!</Text>
           <Text style={styles.completedText}>
             Has completado el ejercicio de fluidez verbal.
@@ -372,7 +378,7 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
           <View style={styles.resultsCard}>
             <View style={styles.resultRow}>
               <View style={styles.resultIcon}>
-                <Ionicons name="create-outline" size={20} color={COLORS.primary} />
+                <Ionicons name="create" size={20} color={COLORS.primary} />
               </View>
               <View style={styles.resultInfo}>
                 <Text style={styles.resultTitle}>Ejercicio</Text>
@@ -382,7 +388,7 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
             
             <View style={styles.resultRow}>
               <View style={styles.resultIcon}>
-                <Ionicons name="text-outline" size={20} color={COLORS.primary} />
+                <Ionicons name="text" size={20} color={COLORS.primary} />
               </View>
               <View style={styles.resultInfo}>
                 <Text style={styles.resultTitle}>Palabras practicadas</Text>
@@ -392,7 +398,7 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
             
             <View style={styles.resultRow}>
               <View style={styles.resultIcon}>
-                <Ionicons name="time-outline" size={20} color={COLORS.primary} />
+                <Ionicons name="time" size={20} color={COLORS.primary} />
               </View>
               <View style={styles.resultInfo}>
                 <Text style={styles.resultTitle}>Tiempo estimado</Text>
@@ -402,26 +408,36 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
           </View>
           
           <View style={styles.medalContainer}>
-            <Ionicons name="mic" size={50} color={COLORS.accent} style={styles.medalIcon} />
+            <LinearGradient
+              colors={['#7C5CEF', '#5B86E5']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.medalCircle}
+            >
+              <Ionicons name="mic" size={50} color="white" style={styles.medalIcon} />
+            </LinearGradient>
             <Text style={styles.medalText}>¡Has ganado una medalla!</Text>
             <Text style={styles.medalTitle}>Hablante de Quechua</Text>
+            <Text style={styles.medalDescription}>
+              Has demostrado tu habilidad para pronunciar palabras en quechua correctamente.
+            </Text>
           </View>
           
           <Button 
             title="Finalizar" 
             onPress={handleFinish}
-            icon={<Ionicons name="checkmark-circle-outline" size={22} color="white" />}
+            icon={<Ionicons name="home" size={22} color="white" />}
             style={{ marginTop: 30 }}
           />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
   
   const currentWord = exercise.words[currentWordIndex];
   
   return (
-    <View style={globalStyles.container}>
+    <SafeAreaView style={globalStyles.container}>
       <LinearGradient
         colors={COLORS.gradient}
         start={{ x: 0, y: 0 }}
@@ -436,6 +452,11 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
       </LinearGradient>
       
       <View style={styles.progressContainer}>
+        <View style={styles.progressTextContainer}>
+          <Text style={styles.progressText}>
+            Palabra {currentWordIndex + 1} de {exercise.words.length}
+          </Text>
+        </View>
         <View style={styles.progressBar}>
           <View 
             style={[
@@ -444,9 +465,6 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
             ]} 
           />
         </View>
-        <Text style={styles.progressText}>
-          Palabra {currentWordIndex + 1} de {exercise.words.length}
-        </Text>
       </View>
       
       <ScrollView style={styles.contentScroll} contentContainerStyle={styles.contentScrollInner}>
@@ -461,9 +479,10 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
             playingExample && styles.playingButton
           ]}
           onPress={playExample}
+          activeOpacity={0.7}
         >
           <Ionicons 
-            name={playingExample ? "pause" : "volume-high-outline"} 
+            name={playingExample ? "pause" : "volume-high"} 
             size={24} 
             color="white" 
           />
@@ -474,12 +493,12 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
         
         {showTip && (
           <View style={styles.tipContainer}>
-            <Ionicons name="bulb-outline" size={24} color={COLORS.warning} />
+            <Ionicons name="bulb" size={24} color={COLORS.warning} />
             <View style={styles.tipContent}>
               <Text style={styles.tipTitle}>Consejo</Text>
               <Text style={styles.tipText}>
                 Intenta repetir la palabra varias veces hasta que suene similar al ejemplo. 
-                Presta atención a la entonación.
+                Presta atención a la entonación y pronuncia con claridad.
               </Text>
             </View>
           </View>
@@ -554,7 +573,7 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
           icon={<Ionicons name="arrow-forward" size={22} color="white" />}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -569,22 +588,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+  progressTextContainer: {
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  progressText: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: '600',
+  },
   progressBar: {
-    height: 8,
+    height: 10,
     backgroundColor: COLORS.background,
-    borderRadius: 4,
-    marginBottom: 10,
+    borderRadius: 5,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   progressFill: {
     height: '100%',
     backgroundColor: COLORS.primary,
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    textAlign: 'center',
+    borderRadius: 5,
   },
   contentScroll: {
     flex: 1,
@@ -596,24 +620,19 @@ const styles = StyleSheet.create({
   },
   wordContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
     backgroundColor: COLORS.card,
     borderRadius: 16,
-    padding: 25,
+    padding: 24,
     width: '100%',
     borderWidth: 1,
     borderColor: COLORS.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
   quechuaWord: {
     fontSize: 32,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 10,
+    marginBottom: 16,
     textAlign: 'center',
   },
   spanishTranslation: {
@@ -621,6 +640,10 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     fontStyle: 'italic',
     textAlign: 'center',
+    padding: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    borderRadius: 8,
+    width: '100%',
   },
   playExampleButton: {
     flexDirection: 'row',
@@ -637,11 +660,11 @@ const styles = StyleSheet.create({
   playExampleText: {
     color: 'white',
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginLeft: 12,
     fontSize: 16,
   },
   tipContainer: {
-    backgroundColor: 'rgba(246, 173, 85, 0.1)',
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 25,
@@ -649,7 +672,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     width: '100%',
     borderWidth: 1,
-    borderColor: 'rgba(246, 173, 85, 0.3)',
+    borderColor: 'rgba(255, 152, 0, 0.3)',
   },
   tipContent: {
     flex: 1,
@@ -659,12 +682,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.warning,
-    marginBottom: 5,
+    marginBottom: 8,
   },
   tipText: {
     fontSize: 14,
     color: COLORS.text,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   recordingControls: {
     alignItems: 'center',
@@ -677,12 +700,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
+    marginBottom: 16,
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   recordingActive: {
     backgroundColor: COLORS.error,
@@ -703,20 +723,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.secondary,
     borderRadius: 12,
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: H20,
     marginBottom: 20,
   },
   playButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginLeft: 12,
     fontSize: 16,
   },
   compareContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   compareDivider: {
     flex: 1,
@@ -726,7 +746,7 @@ const styles = StyleSheet.create({
   compareText: {
     fontSize: 14,
     color: COLORS.textLight,
-    marginHorizontal: 15,
+    marginHorizontal: 16,
   },
   exampleAudioButton: {
     flexDirection: 'row',
@@ -739,7 +759,7 @@ const styles = StyleSheet.create({
   exampleAudioText: {
     color: 'white',
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginLeft: 12,
     fontSize: 16,
   },
   buttonContainer: {
@@ -756,11 +776,21 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
+  successIconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
   completedTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -788,10 +818,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(74, 111, 255, 0.1)',
+    backgroundColor: 'rgba(91, 134, 229, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   resultInfo: {
     flex: 1,
@@ -807,30 +837,47 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   medalContainer: {
-    backgroundColor: 'rgba(94, 96, 206, 0.1)',
+    backgroundColor: 'rgba(124, 92, 239, 0.1)',
     borderRadius: 16,
     padding: 25,
     alignItems: 'center',
     marginTop: 5,
     borderWidth: 1,
-    borderColor: COLORS.accent,
+    borderColor: 'rgba(124, 92, 239, 0.3)',
     width: '100%',
   },
+  medalCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
   medalIcon: {
-    marginBottom: 15,
+    
   },
   medalText: {
     fontSize: 16,
     color: COLORS.text,
-    marginBottom: 5,
+    marginBottom: 8,
     textAlign: 'center',
     fontWeight: 'bold',
   },
   medalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: COLORS.accent,
     textAlign: 'center',
+    marginBottom: 10,
+  },
+  medalDescription: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   errorContainer: {
     flex: 1,
@@ -842,8 +889,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.error,
     textAlign: 'center',
-    marginTop: 15,
-    marginBottom: 20,
+    marginTop: 16,
+    lineHeight: 24,
+    maxWidth: '80%',
   },
 });
 

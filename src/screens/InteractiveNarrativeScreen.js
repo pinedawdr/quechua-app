@@ -1,6 +1,6 @@
 // src/screens/InteractiveNarrativeScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import Header from '../components/Header';
@@ -74,7 +74,7 @@ const InteractiveNarrativeScreen = ({ route, navigation }) => {
 
   if (error || !narrative || !narrative.scenes || narrative.scenes.length === 0) {
     return (
-      <View style={globalStyles.container}>
+      <SafeAreaView style={globalStyles.container}>
         <LinearGradient
           colors={COLORS.gradient}
           start={{ x: 0, y: 0 }}
@@ -88,19 +88,24 @@ const InteractiveNarrativeScreen = ({ route, navigation }) => {
           />
         </LinearGradient>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={50} color={COLORS.error} />
+          <Ionicons name="alert-circle" size={60} color={COLORS.error} />
           <Text style={styles.errorText}>
             {error || 'Esta narrativa no tiene escenas disponibles'}
           </Text>
+          <Button 
+            title="Volver a narrativas" 
+            onPress={() => navigation.goBack()}
+            style={{marginTop: 20}}
+          />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   const scene = narrative.scenes[currentScene];
 
   return (
-    <View style={globalStyles.container}>
+    <SafeAreaView style={globalStyles.container}>
       <LinearGradient
         colors={COLORS.gradient}
         start={{ x: 0, y: 0 }}
@@ -115,12 +120,28 @@ const InteractiveNarrativeScreen = ({ route, navigation }) => {
       </LinearGradient>
       
       <ScrollView style={styles.content}>
+        <View style={styles.sceneProgressContainer}>
+          <View style={styles.sceneProgressBar}>
+            <View 
+              style={[
+                styles.sceneProgressFill, 
+                { width: `${((currentScene + 1) / narrative.scenes.length) * 100}%` }
+              ]} 
+            />
+          </View>
+          <Text style={styles.sceneProgressText}>
+            Escena {currentScene + 1} de {narrative.scenes.length}
+          </Text>
+        </View>
+        
         {scene.image && (
-          <Image 
-            source={{ uri: scene.image }} 
-            style={styles.sceneImage}
-            resizeMode="cover"
-          />
+          <View style={styles.imageContainer}>
+            <Image 
+              source={{ uri: scene.image }} 
+              style={styles.sceneImage}
+              resizeMode="cover"
+            />
+          </View>
         )}
         
         <View style={styles.sceneContent}>
@@ -139,7 +160,7 @@ const InteractiveNarrativeScreen = ({ route, navigation }) => {
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={['rgba(74, 111, 255, 0.1)', 'rgba(94, 96, 206, 0.05)']}
+                    colors={['rgba(91, 134, 229, 0.1)', 'rgba(124, 92, 239, 0.05)']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.choiceGradient}
@@ -156,7 +177,7 @@ const InteractiveNarrativeScreen = ({ route, navigation }) => {
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -167,6 +188,37 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  sceneProgressContainer: {
+    padding: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  sceneProgressBar: {
+    height: 8,
+    backgroundColor: COLORS.background,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  sceneProgressFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 4,
+  },
+  sceneProgressText: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    textAlign: 'center',
+  },
+  imageContainer: {
+    borderRadius: 0,
+    overflow: 'hidden',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
   sceneImage: {
     width: '100%',
@@ -179,8 +231,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 15,
+    marginBottom: 16,
     lineHeight: 28,
+    backgroundColor: 'rgba(91, 134, 229, 0.05)',
+    padding: 16,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.primary,
   },
   spanishText: {
     fontSize: 16,
@@ -188,6 +245,7 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     marginBottom: 30,
     lineHeight: 24,
+    padding: 16,
   },
   choicesContainer: {
     marginTop: 10,
@@ -196,35 +254,46 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 15,
+    marginBottom: 16,
     textAlign: 'center',
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+    paddingVertical: 8,
+    borderRadius: 12,
   },
   choiceOption: {
-    marginBottom: 15,
+    marginBottom: 16,
     borderRadius: 12,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   choiceGradient: {
     borderRadius: 12,
-    padding: 15,
+    padding: 16,
     position: 'relative',
   },
   choiceQuechua: {
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 5,
+    marginBottom: 8,
   },
   choiceSpanish: {
     fontSize: 14,
     color: COLORS.textLight,
-    marginBottom: 5,
+    marginBottom: 24,
+    fontStyle: 'italic',
   },
   choiceArrow: {
     position: 'absolute',
-    right: 15,
-    top: '50%',
-    transform: [{ translateY: -9 }],
+    right: 16,
+    bottom: 16,
+    backgroundColor: 'rgba(91, 134, 229, 0.1)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   errorContainer: {
     flex: 1,
@@ -236,7 +305,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.error,
     textAlign: 'center',
-    marginTop: 15,
+    marginTop: 16,
+    lineHeight: 24,
+    maxWidth: '80%',
   },
 });
 

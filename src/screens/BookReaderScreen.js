@@ -1,6 +1,6 @@
 // src/screens/BookReaderScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import Header from '../components/Header';
@@ -101,7 +101,7 @@ const BookReaderScreen = ({ route, navigation }) => {
   
   if (!book) {
     return (
-      <View style={globalStyles.container}>
+      <SafeAreaView style={globalStyles.container}>
         <LinearGradient
           colors={COLORS.gradient}
           start={{ x: 0, y: 0 }}
@@ -115,12 +115,17 @@ const BookReaderScreen = ({ route, navigation }) => {
           />
         </LinearGradient>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={50} color={COLORS.error} />
+          <Ionicons name="alert-circle" size={60} color={COLORS.error} />
           <Text style={styles.errorText}>
             No se pudo cargar el libro. Por favor, intenta nuevamente.
           </Text>
+          <Button 
+            title="Volver a la lista" 
+            onPress={() => navigation.goBack()}
+            style={{marginTop: 20}}
+          />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
   
@@ -128,7 +133,7 @@ const BookReaderScreen = ({ route, navigation }) => {
   const isLastPage = currentPage === book.pages.length - 1;
   
   return (
-    <View style={globalStyles.container}>
+    <SafeAreaView style={globalStyles.container}>
       <LinearGradient
         colors={COLORS.gradient}
         start={{ x: 0, y: 0 }}
@@ -180,11 +185,13 @@ const BookReaderScreen = ({ route, navigation }) => {
       <ScrollView style={styles.content}>
         <View style={styles.bookContent}>
           {currentPageData.image && (
-            <Image 
-              source={{ uri: currentPageData.image }} 
-              style={styles.pageImage}
-              resizeMode="contain"
-            />
+            <View style={styles.imageContainer}>
+              <Image 
+                source={{ uri: currentPageData.image }} 
+                style={styles.pageImage}
+                resizeMode="contain"
+              />
+            </View>
           )}
           
           <View style={styles.textContent}>
@@ -232,7 +239,7 @@ const BookReaderScreen = ({ route, navigation }) => {
           <Button 
             title="Hacer Quiz" 
             onPress={handleFinishReading}
-            icon={<Ionicons name="checkmark-circle-outline" size={22} color="white" />}
+            icon={<Ionicons name="checkmark-circle" size={22} color="white" />}
             style={styles.finishButton}
           />
         ) : (
@@ -246,7 +253,7 @@ const BookReaderScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -256,7 +263,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   pageIndicator: {
-    padding: 15,
+    padding: 16,
     backgroundColor: COLORS.card,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -265,12 +272,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   pageNumberBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -278,6 +285,7 @@ const styles = StyleSheet.create({
   pageNumberText: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 16,
   },
   pageIndicatorText: {
     fontSize: 14,
@@ -287,10 +295,10 @@ const styles = StyleSheet.create({
   translationToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(74, 111, 255, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
+    backgroundColor: 'rgba(91, 134, 229, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   translationToggleText: {
     fontSize: 12,
@@ -299,15 +307,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   progressBar: {
-    height: 6,
+    height: 8,
     backgroundColor: COLORS.background,
-    borderRadius: 3,
+    borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     backgroundColor: COLORS.primary,
-    borderRadius: 3,
+    borderRadius: 4,
   },
   content: {
     flex: 1,
@@ -316,11 +324,16 @@ const styles = StyleSheet.create({
   bookContent: {
     padding: 20,
   },
+  imageContainer: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
   pageImage: {
     width: '100%',
     height: 200,
-    marginBottom: 20,
-    borderRadius: 12,
   },
   textContent: {
     backgroundColor: COLORS.card,
@@ -328,24 +341,19 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
   quechuaText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
     color: COLORS.text,
-    lineHeight: 30,
+    lineHeight: 32,
   },
   translationContainer: {
-    backgroundColor: 'rgba(74, 111, 255, 0.05)',
-    padding: 15,
+    backgroundColor: 'rgba(91, 134, 229, 0.05)',
+    padding: 16,
     borderRadius: 12,
-    marginBottom: 15,
+    marginBottom: 16,
     borderLeftWidth: 3,
     borderLeftColor: COLORS.primary,
   },
@@ -353,7 +361,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: COLORS.primary,
-    marginBottom: 5,
+    marginBottom: 8,
   },
   spanishText: {
     fontSize: 16,
@@ -362,8 +370,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   notesContainer: {
-    backgroundColor: 'rgba(246, 173, 85, 0.1)',
-    padding: 15,
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+    padding: 16,
     borderRadius: 12,
     borderLeftWidth: 3,
     borderLeftColor: COLORS.warning,
@@ -372,18 +380,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: COLORS.warning,
-    marginBottom: 5,
+    marginBottom: 8,
   },
   notesText: {
     fontSize: 14,
     color: COLORS.text,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   navigationButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    padding: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     backgroundColor: COLORS.card,
@@ -392,9 +400,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     borderRadius: 10,
-    backgroundColor: 'rgba(74, 111, 255, 0.1)',
+    backgroundColor: 'rgba(91, 134, 229, 0.1)',
   },
   navButtonText: {
     color: COLORS.primary,
@@ -413,7 +421,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     borderRadius: 10,
     backgroundColor: COLORS.primary,
   },
@@ -425,15 +433,16 @@ const styles = StyleSheet.create({
   },
   pageIndicatorMini: {
     backgroundColor: COLORS.background,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   pageIndicatorMiniText: {
     fontSize: 12,
     color: COLORS.textLight,
+    fontWeight: '600',
   },
   finishButton: {
     minWidth: 140,
@@ -449,6 +458,8 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     textAlign: 'center',
     marginTop: 15,
+    marginBottom: 10,
+    lineHeight: 24,
   },
 });
 

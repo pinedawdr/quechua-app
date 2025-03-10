@@ -2,35 +2,28 @@
 import { StyleSheet } from 'react-native';
 
 export const COLORS = {
-  primary: '#4A6FFF',        // Azul principal
+  primary: '#5B86E5',        // Azul principal más vibrante
   secondary: '#36D1DC',      // Azul turquesa
-  accent: '#5E60CE',         // Púrpura suave
-  gradient: ['#4A6FFF', '#36D1DC'],  // Gradiente principal
-  accentGradient: ['#5E60CE', '#4A6FFF'],  // Gradiente secundario
+  accent: '#7C5CEF',         // Púrpura más vibrante  
+  gradient: ['#5B86E5', '#36D1DC'],  // Gradiente principal
+  accentGradient: ['#7C5CEF', '#5B86E5'],  // Gradiente secundario
   background: '#F8FAFF',     // Fondo claro
   text: '#2D3748',           // Texto oscuro
   textLight: '#718096',      // Texto secundario
-  success: '#48BB78',        // Verde éxito
-  error: '#F56565',          // Rojo error
-  warning: '#F6AD55',        // Naranja advertencia
+  success: '#4CAF50',        // Verde éxito
+  error: '#F44336',          // Rojo error
+  warning: '#FF9800',        // Naranja advertencia
   card: '#FFFFFF',           // Fondo de tarjetas
   border: '#E2E8F0',         // Bordes
 };
 
 export const SHADOWS = {
-  small: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  medium: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4.65,
-    elevation: 2,
+  none: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   }
 };
 
@@ -71,50 +64,52 @@ export const globalStyles = StyleSheet.create({
   },
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: 15,
-    padding: 15,
-    marginVertical: 8,
-    ...SHADOWS.small,
-    borderWidth: 0,
+    borderRadius: 16,
+    padding: 16,
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     ...FONTS.heading,
-    marginBottom: 5,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     ...FONTS.subheading,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   paragraph: {
     fontSize: 16,
     ...FONTS.body,
-    marginBottom: 15,
+    marginBottom: 16,
+    lineHeight: 24,
   },
   inputContainer: {
     backgroundColor: COLORS.card,
     borderRadius: 12,
-    borderWidth: 0,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     padding: 12,
-    marginBottom: 15,
+    marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 16,
     ...FONTS.subheading,
-    marginBottom: 5,
+    marginBottom: 6,
   },
   gradientButton: {
     borderRadius: 12,
     overflow: 'hidden',
-    marginVertical: 8,
+    marginVertical: 10,
   },
   buttonContent: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   buttonText: {
     fontSize: 16,
@@ -122,35 +117,35 @@ export const globalStyles = StyleSheet.create({
     color: COLORS.card,
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    marginRight: 15,
+    marginRight: 16,
   },
   sectionHeader: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 15,
-    marginTop: 20,
+    marginBottom: 16,
+    marginTop: 24,
   },
   divider: {
     height: 1,
     backgroundColor: COLORS.border,
-    marginVertical: 15,
+    marginVertical: 16,
   },
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
     backgroundColor: COLORS.accent,
   },
   badgeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   errorText: {
@@ -176,28 +171,32 @@ export const globalStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   progressBar: {
-    height: 8,
+    height: 10,
     backgroundColor: COLORS.background,
-    borderRadius: 4,
+    borderRadius: 5,
     overflow: 'hidden',
-    marginVertical: 10,
+    marginVertical: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   progressFill: {
     height: '100%',
     backgroundColor: COLORS.primary,
-    borderRadius: 4,
+    borderRadius: 5,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
   },
   avatarText: {
     color: 'white',
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
   },
   modalContainer: {
@@ -210,28 +209,63 @@ export const globalStyles = StyleSheet.create({
   modalContent: {
     backgroundColor: COLORS.card,
     borderRadius: 16,
-    padding: 20,
+    padding: 24,
     width: '100%',
     maxWidth: 500,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 15,
+    marginBottom: 16,
   },
   listItem: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     backgroundColor: COLORS.card,
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 4,
+    marginVertical: 6,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   listItemText: {
     fontSize: 16,
     color: COLORS.text,
     flex: 1,
-  }
+  },
+  roundedButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
+    borderWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roundedButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  childFriendlyContainer: {
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: COLORS.card,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    marginVertical: 10,
+  },
+  childFriendlyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
 });

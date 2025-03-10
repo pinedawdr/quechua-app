@@ -1,9 +1,8 @@
 // src/screens/VerbalFluencyScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import Card from '../components/Card';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,10 +42,10 @@ const VerbalFluencyScreen = ({ navigation }) => {
   };
 
   const filters = [
-    { id: 'all', label: 'Todos', icon: 'grid-outline' },
-    { id: 'pronunciation', label: 'Pronunciación', icon: 'mic-outline' },
-    { id: 'vocabulary', label: 'Vocabulario', icon: 'book-outline' },
-    { id: 'conversation', label: 'Conversación', icon: 'chatbubbles-outline' }
+    { id: 'all', label: 'Todos', icon: 'grid' },
+    { id: 'pronunciation', label: 'Pronunciación', icon: 'mic' },
+    { id: 'vocabulary', label: 'Vocabulario', icon: 'book' },
+    { id: 'conversation', label: 'Conversación', icon: 'chatbubbles' }
   ];
 
   const filteredExercises = activeFilter === 'all' 
@@ -58,7 +57,7 @@ const VerbalFluencyScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={globalStyles.container}>
+    <SafeAreaView style={globalStyles.container}>
       <LinearGradient
         colors={COLORS.gradient}
         start={{ x: 0, y: 0 }}
@@ -74,7 +73,7 @@ const VerbalFluencyScreen = ({ navigation }) => {
       
       {error ? (
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={50} color={COLORS.error} />
+          <Ionicons name="alert-circle" size={60} color={COLORS.error} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : (
@@ -89,7 +88,11 @@ const VerbalFluencyScreen = ({ navigation }) => {
           </View>
           
           <View style={styles.filterContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              contentContainerStyle={styles.filterScroll}
+            >
               {filters.map(filter => (
                 <TouchableOpacity 
                   key={filter.id} 
@@ -104,6 +107,7 @@ const VerbalFluencyScreen = ({ navigation }) => {
                     name={filter.icon} 
                     size={18} 
                     color={activeFilter === filter.id ? 'white' : COLORS.textLight} 
+                    style={styles.filterIcon}
                   />
                   <Text style={[
                     styles.filterText,
@@ -118,14 +122,14 @@ const VerbalFluencyScreen = ({ navigation }) => {
           
           {exercises.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="mic-outline" size={50} color={COLORS.textLight} />
+              <Ionicons name="mic" size={60} color={COLORS.textLight} />
               <Text style={styles.emptyText}>
                 No hay ejercicios disponibles en este momento. Vuelve más tarde.
               </Text>
             </View>
           ) : filteredExercises.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="filter-outline" size={50} color={COLORS.textLight} />
+              <Ionicons name="filter" size={60} color={COLORS.textLight} />
               <Text style={styles.emptyText}>
                 No hay ejercicios disponibles en esta categoría. Prueba con otra.
               </Text>
@@ -135,64 +139,62 @@ const VerbalFluencyScreen = ({ navigation }) => {
               data={filteredExercises}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <View style={styles.exerciseCard}>
-                  <TouchableOpacity
-                    style={styles.exerciseContent}
-                    onPress={() => handleExerciseSelect(item)}
-                    activeOpacity={0.9}
+                <TouchableOpacity
+                  style={styles.exerciseCard}
+                  onPress={() => handleExerciseSelect(item)}
+                  activeOpacity={0.9}
+                >
+                  <LinearGradient
+                    colors={getExerciseGradient(item.type)}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.exerciseIconContainer}
                   >
-                    <LinearGradient
-                      colors={getExerciseGradient(item.type)}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.exerciseIconContainer}
-                    >
-                      <Ionicons 
-                        name={getExerciseIcon(item.type)} 
-                        size={24} 
-                        color="white" 
-                      />
-                    </LinearGradient>
+                    <Ionicons 
+                      name={getExerciseIcon(item.type)} 
+                      size={24} 
+                      color="white" 
+                    />
+                  </LinearGradient>
+                  
+                  <View style={styles.exerciseDetails}>
+                    <Text style={styles.exerciseTitle}>{item.title}</Text>
+                    <Text style={styles.exerciseDescription}>
+                      {item.description || 'Practica tu pronunciación en quechua'}
+                    </Text>
                     
-                    <View style={styles.exerciseDetails}>
-                      <Text style={styles.exerciseTitle}>{item.title}</Text>
-                      <Text style={styles.exerciseDescription}>
-                        {item.description || 'Practica tu pronunciación en quechua'}
-                      </Text>
+                    <View style={styles.exerciseMetadata}>
+                      <View style={styles.metadataItem}>
+                        <Ionicons name="time" size={14} color={COLORS.textLight} />
+                        <Text style={styles.metadataText}>
+                          {item.duration || '5-10'} min
+                        </Text>
+                      </View>
                       
-                      <View style={styles.exerciseMetadata}>
-                        <View style={styles.metadataItem}>
-                          <Ionicons name="time-outline" size={14} color={COLORS.textLight} />
-                          <Text style={styles.metadataText}>
-                            {item.duration || '5-10'} min
-                          </Text>
-                        </View>
-                        
-                        <View style={styles.metadataItem}>
-                          <Ionicons name="analytics-outline" size={14} color={COLORS.textLight} />
-                          <Text style={styles.metadataText}>
-                            {getExerciseDifficulty(item.difficulty)}
-                          </Text>
-                        </View>
-                        
-                        <View style={styles.tagContainer}>
-                          <Text style={styles.tagText}>
-                            {getTypeLabel(item.type)}
-                          </Text>
-                        </View>
+                      <View style={styles.metadataItem}>
+                        <Ionicons name="analytics" size={14} color={COLORS.textLight} />
+                        <Text style={styles.metadataText}>
+                          {getExerciseDifficulty(item.difficulty)}
+                        </Text>
+                      </View>
+                      
+                      <View style={styles.tagContainer}>
+                        <Text style={styles.tagText}>
+                          {getTypeLabel(item.type)}
+                        </Text>
                       </View>
                     </View>
-                    
-                    <Ionicons name="chevron-forward" size={24} color={COLORS.primary} />
-                  </TouchableOpacity>
-                </View>
+                  </View>
+                  
+                  <Ionicons name="chevron-forward" size={24} color={COLORS.primary} />
+                </TouchableOpacity>
               )}
               contentContainerStyle={styles.listContent}
             />
           )}
         </>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -202,9 +204,9 @@ const getExerciseGradient = (type) => {
     case 'pronunciation':
       return ['#36D1DC', '#5B86E5'];
     case 'vocabulary':
-      return ['#5E60CE', '#6A67CE'];
+      return ['#7C5CEF', '#5B86E5'];
     case 'conversation':
-      return ['#F6AD55', '#F69A55'];
+      return ['#FF9E80', '#FF6E40'];
     default:
       return COLORS.gradient;
   }
@@ -255,24 +257,25 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   headerContainer: {
-    padding: 20,
+    padding: A20,
     backgroundColor: COLORS.card,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   description: {
     fontSize: 14,
     color: COLORS.textLight,
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 8,
   },
   filterContainer: {
-    paddingVertical: 15,
+    paddingVertical: 16,
     backgroundColor: COLORS.background,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -285,11 +288,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.background,
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginRight: 10,
+    paddingHorizontal: 14,
+    marginRight: 12,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
+  },
+  filterIcon: {
+    marginRight: 6,
   },
   filterButtonActive: {
     backgroundColor: COLORS.primary,
@@ -298,7 +304,6 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 14,
     color: COLORS.textLight,
-    marginLeft: 5,
   },
   filterTextActive: {
     color: 'white',
@@ -311,23 +316,20 @@ const styles = StyleSheet.create({
   exerciseCard: {
     backgroundColor: COLORS.card,
     borderRadius: 16,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: 'hidden',
-  },
-  exerciseContent: {
+    padding: 16,
+    marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   exerciseIconContainer: {
     width: 50,
     height: 50,
-    borderRadius: 25,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 16,
   },
   exerciseDetails: {
     flex: 1,
@@ -337,22 +339,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 5,
+    marginBottom: 6,
   },
   exerciseDescription: {
     fontSize: 14,
     color: COLORS.textLight,
     lineHeight: 20,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   exerciseMetadata: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   metadataItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 12,
+    marginBottom: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   metadataText: {
     fontSize: 12,
@@ -361,12 +369,13 @@ const styles = StyleSheet.create({
   },
   tagContainer: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 10,
-    backgroundColor: 'rgba(74, 111, 255, 0.1)',
+    backgroundColor: 'rgba(91, 134, 229, 0.1)',
+    marginBottom: 4,
   },
   tagText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
     color: COLORS.primary,
   },
@@ -380,7 +389,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.error,
     textAlign: 'center',
-    marginTop: 15,
+    marginTop: 16,
+    lineHeight: 24,
+    maxWidth: '80%',
   },
   emptyContainer: {
     flex: 1,
@@ -392,7 +403,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textLight,
     textAlign: 'center',
-    marginTop: 15,
+    marginTop: 16,
+    lineHeight: 24,
+    maxWidth: '80%',
   },
 });
 
