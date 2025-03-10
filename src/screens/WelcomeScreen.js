@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   },
   switchText: {
     color: 'white',
-    marginTop: 16,
+    marginTop: 20,
     fontSize: 16,
     textAlign: 'center',
     textDecorationLine: 'underline',
@@ -324,6 +324,8 @@ const styles = StyleSheet.create({
   decoration: {
     flexDirection: 'row',
     justifyContent: 'center',
+    paddingVertical: 40,
+
   }
 });
 

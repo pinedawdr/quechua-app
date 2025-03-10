@@ -101,7 +101,7 @@ const MainAppTabs = () => {
     >
       <Tab.Screen name="Home" component={MainMenuScreen} options={{ title: 'Inicio' }} />
       <Tab.Screen name="Progress" component={ProgressScreen} options={{ title: 'Progreso' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Perfil' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Mi Perfil' }} />
     </Tab.Navigator>
   );
 };

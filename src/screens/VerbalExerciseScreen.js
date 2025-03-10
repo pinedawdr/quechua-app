@@ -346,93 +346,98 @@ const VerbalExerciseScreen = ({ route, navigation }) => {
     );
   }
   
-  if (completed) {
-    return (
-      <SafeAreaView style={globalStyles.container}>
+// En la sección donde se muestra la pantalla de completado
+if (completed) {
+  return (
+    <SafeAreaView style={globalStyles.container}>
+      <LinearGradient
+        colors={COLORS.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <Header 
+          title="¡Completado!" 
+          showBack={false}
+        />
+      </LinearGradient>
+      
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={styles.completedContainer}
+        showsVerticalScrollIndicator={true}
+      >
         <LinearGradient
-          colors={COLORS.gradient}
+          colors={['#5B86E5', '#36D1DC']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.header}
+          style={styles.successIconCircle}
         >
-          <Header 
-            title="¡Completado!" 
-            showBack={false}
-          />
+          <Ionicons name="checkmark" size={60} color="white" />
         </LinearGradient>
+        <Text style={styles.completedTitle}>¡Excelente trabajo!</Text>
+        <Text style={styles.completedText}>
+          Has completado el ejercicio de fluidez verbal.
+        </Text>
         
-        <View style={styles.completedContainer}>
+        <View style={styles.resultsCard}>
+          <View style={styles.resultRow}>
+            <View style={styles.resultIcon}>
+              <Ionicons name="create" size={20} color={COLORS.primary} />
+            </View>
+            <View style={styles.resultInfo}>
+              <Text style={styles.resultTitle}>Ejercicio</Text>
+              <Text style={styles.resultValue}>{exercise.title}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.resultRow}>
+            <View style={styles.resultIcon}>
+              <Ionicons name="text" size={20} color={COLORS.primary} />
+            </View>
+            <View style={styles.resultInfo}>
+              <Text style={styles.resultTitle}>Palabras practicadas</Text>
+              <Text style={styles.resultValue}>{exercise.words.length}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.resultRow}>
+            <View style={styles.resultIcon}>
+              <Ionicons name="time" size={20} color={COLORS.primary} />
+            </View>
+            <View style={styles.resultInfo}>
+              <Text style={styles.resultTitle}>Tiempo estimado</Text>
+              <Text style={styles.resultValue}>{exercise.words.length * 3} minutos</Text>
+            </View>
+          </View>
+        </View>
+        
+        <View style={styles.medalContainer}>
           <LinearGradient
-            colors={['#5B86E5', '#36D1DC']}
+            colors={['#7C5CEF', '#5B86E5']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.successIconCircle}
+            style={styles.medalCircle}
           >
-            <Ionicons name="checkmark" size={60} color="white" />
+            <Ionicons name="mic" size={50} color="white" style={styles.medalIcon} />
           </LinearGradient>
-          <Text style={styles.completedTitle}>¡Excelente trabajo!</Text>
-          <Text style={styles.completedText}>
-            Has completado el ejercicio de fluidez verbal.
+          <Text style={styles.medalText}>¡Has ganado una medalla!</Text>
+          <Text style={styles.medalTitle}>Hablante de Quechua</Text>
+          <Text style={styles.medalDescription}>
+            Has demostrado tu habilidad para pronunciar palabras en quechua correctamente.
           </Text>
-          
-          <View style={styles.resultsCard}>
-            <View style={styles.resultRow}>
-              <View style={styles.resultIcon}>
-                <Ionicons name="create" size={20} color={COLORS.primary} />
-              </View>
-              <View style={styles.resultInfo}>
-                <Text style={styles.resultTitle}>Ejercicio</Text>
-                <Text style={styles.resultValue}>{exercise.title}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.resultRow}>
-              <View style={styles.resultIcon}>
-                <Ionicons name="text" size={20} color={COLORS.primary} />
-              </View>
-              <View style={styles.resultInfo}>
-                <Text style={styles.resultTitle}>Palabras practicadas</Text>
-                <Text style={styles.resultValue}>{exercise.words.length}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.resultRow}>
-              <View style={styles.resultIcon}>
-                <Ionicons name="time" size={20} color={COLORS.primary} />
-              </View>
-              <View style={styles.resultInfo}>
-                <Text style={styles.resultTitle}>Tiempo estimado</Text>
-                <Text style={styles.resultValue}>{exercise.words.length * 3} minutos</Text>
-              </View>
-            </View>
-          </View>
-          
-          <View style={styles.medalContainer}>
-            <LinearGradient
-              colors={['#7C5CEF', '#5B86E5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.medalCircle}
-            >
-              <Ionicons name="mic" size={50} color="white" style={styles.medalIcon} />
-            </LinearGradient>
-            <Text style={styles.medalText}>¡Has ganado una medalla!</Text>
-            <Text style={styles.medalTitle}>Hablante de Quechua</Text>
-            <Text style={styles.medalDescription}>
-              Has demostrado tu habilidad para pronunciar palabras en quechua correctamente.
-            </Text>
-          </View>
-          
-          <Button 
-            title="Finalizar" 
-            onPress={handleFinish}
-            icon={<Ionicons name="home" size={22} color="white" />}
-            style={{ marginTop: 30 }}
-          />
         </View>
-      </SafeAreaView>
-    );
-  }
+        
+        <Button 
+          title="Finalizar" 
+          onPress={handleFinish}
+          icon={<Ionicons name="home" size={22} color="white" />}
+          style={{ marginTop: 30, marginBottom: 20 }}
+        />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
   
   const currentWord = exercise.words[currentWordIndex];
   
@@ -771,10 +776,15 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.5,
   },
-  completedContainer: {
+  content: {
     flex: 1,
+  },
+
+
+  completedContainer: {
     padding: 20,
     alignItems: 'center',
+    addingBottom: 40, 
   },
   successIconCircle: {
     width: 100,

@@ -84,10 +84,10 @@ const ProfileScreen = ({ navigation }) => {
             updatedAt: new Date().toISOString()
           }, { merge: true });
           
-          // Cargar medallas del usuario
+          // Cargar medallas del usuario con lógica mejorada
           const medalsQuery = await getDoc(doc(db, 'users', user.uid, 'stats', 'medals'));
           if (medalsQuery.exists()) {
-            const medalCount = medalsQuery.data().count || medals.length;
+            const medalCount = medalsQuery.data().count || 0; // Usar 0 como valor por defecto
             setUserMedals(medalCount);
             setUserLevel(calculateUserLevel(medalCount));
           } else {
@@ -419,7 +419,18 @@ const ProfileScreen = ({ navigation }) => {
           style: "destructive",
           onPress: async () => {
             try {
-              clearProgress(); // Limpiar progreso local
+              // Limpiar progreso local primero
+              clearProgress(); 
+              
+              // Actualizar stats locales inmediatamente
+              setProfileStats({
+                booksRead: 0,
+                exercisesCompleted: 0,
+                totalMinutes: 0
+              });
+              
+              setUserMedals(0);
+              setUserLevel(1);
               
               if (!isGuest && user) {
                 // Marcar como "reset" en Firestore para mantener historial
@@ -441,16 +452,6 @@ const ProfileScreen = ({ navigation }) => {
                   count: 0,
                   resetAt: new Date().toISOString()
                 }, { merge: true });
-                
-                // Actualizar stats locales
-                setProfileStats({
-                  booksRead: 0,
-                  exercisesCompleted: 0,
-                  totalMinutes: 0
-                });
-                
-                setUserMedals(0);
-                setUserLevel(1);
               }
               
               Alert.alert('Éxito', 'Tu progreso ha sido restablecido');
