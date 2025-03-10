@@ -43,7 +43,6 @@ const ProfileScreen = ({ navigation }) => {
           if (userDoc.exists()) {
             const userData = userDoc.data();
             setInstitution(userData.institution || '');
-            setLevel(userData.level || 'Principiante');
             setNotifications(userData.notifications !== undefined ? userData.notifications : true);
             // Cargar la foto de perfil si existe
             if (userData.profileImage) {
@@ -89,11 +88,19 @@ const ProfileScreen = ({ navigation }) => {
           if (medalsQuery.exists()) {
             const medalCount = medalsQuery.data().count || 0; // Usar 0 como valor por defecto
             setUserMedals(medalCount);
-            setUserLevel(calculateUserLevel(medalCount));
+            
+            // Calcular nivel basado en medallas
+            const calculatedLevel = calculateUserLevel(medalCount);
+            setUserLevel(calculatedLevel);
+            setLevel(getLevelLabel(calculatedLevel)); // Actualizar también el nivel para el formulario
           } else {
             // Si no hay documento de medallas, usar las medallas locales
             setUserMedals(medals.length);
-            setUserLevel(calculateUserLevel(medals.length));
+            
+            // Calcular nivel basado en medallas
+            const calculatedLevel = calculateUserLevel(medals.length);
+            setUserLevel(calculatedLevel);
+            setLevel(getLevelLabel(calculatedLevel)); // Actualizar también el nivel para el formulario
             
             // Guardar conteo de medallas en Firestore
             await setDoc(doc(db, 'users', user.uid, 'stats', 'medals'), {
@@ -118,7 +125,11 @@ const ProfileScreen = ({ navigation }) => {
         });
         
         setUserMedals(medals.length);
-        setUserLevel(calculateUserLevel(medals.length));
+        
+        // Calcular nivel basado en medallas
+        const calculatedLevel = calculateUserLevel(medals.length);
+        setUserLevel(calculatedLevel);
+        setLevel(getLevelLabel(calculatedLevel)); // Actualizar también el nivel para el formulario
       }
     };
     
@@ -419,6 +430,10 @@ const ProfileScreen = ({ navigation }) => {
           style: "destructive",
           onPress: async () => {
             try {
+              // Guardar una copia de las estadísticas actuales antes de limpiar
+              const currentStats = { ...profileStats };
+              const currentMedals = userMedals;
+              
               // Limpiar progreso local primero
               clearProgress(); 
               
@@ -431,27 +446,39 @@ const ProfileScreen = ({ navigation }) => {
               
               setUserMedals(0);
               setUserLevel(1);
+              setLevel('Principiante');
               
               if (!isGuest && user) {
-                // Marcar como "reset" en Firestore para mantener historial
-                await setDoc(doc(db, 'users', user.uid, 'stats', 'reset'), {
-                  resetAt: new Date().toISOString(),
-                  previousStats: profileStats
-                }, { merge: true });
-                
-                // Actualizar estadísticas
-                await setDoc(doc(db, 'users', user.uid, 'stats', 'overview'), {
-                  booksRead: 0,
-                  exercisesCompleted: 0,
-                  totalMinutes: 0,
-                  resetAt: new Date().toISOString()
-                }, { merge: true });
-                
-                // Actualizar conteo de medallas
-                await setDoc(doc(db, 'users', user.uid, 'stats', 'medals'), {
-                  count: 0,
-                  resetAt: new Date().toISOString()
-                }, { merge: true });
+                try {
+                  // Marcar como "reset" en Firestore para mantener historial
+                  await setDoc(doc(db, 'users', user.uid, 'stats', 'reset'), {
+                    resetAt: new Date().toISOString(),
+                    previousStats: currentStats,
+                    previousMedals: currentMedals
+                  });
+                  
+                  // Actualizar estadísticas
+                  await setDoc(doc(db, 'users', user.uid, 'stats', 'overview'), {
+                    booksRead: 0,
+                    exercisesCompleted: 0,
+                    totalMinutes: 0,
+                    resetAt: new Date().toISOString()
+                  }, { merge: true });
+                  
+                  // Actualizar conteo de medallas
+                  await setDoc(doc(db, 'users', user.uid, 'stats', 'medals'), {
+                    count: 0,
+                    resetAt: new Date().toISOString()
+                  }, { merge: true });
+                  
+                  // Actualizar el nivel en el perfil del usuario
+                  await updateDoc(doc(db, 'users', user.uid), {
+                    level: 'Principiante',
+                    updatedAt: new Date().toISOString()
+                  });
+                } catch (firebaseError) {
+                  console.error("Error resetting in Firebase:", firebaseError);
+                }
               }
               
               Alert.alert('Éxito', 'Tu progreso ha sido restablecido');
@@ -817,11 +844,6 @@ const styles = StyleSheet.create({
   },
   levelTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  levelValue: {
-    fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.primary,
   },

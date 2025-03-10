@@ -1,7 +1,7 @@
 // src/screens/ProgressScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
-import { collection, query, where, getDocs, doc, getDoc, orderBy, limit } from 'firebase/firestore';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import { collection, getDocs, query, where, limit, doc, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import useProgressStore from '../store/progressStore';
 import useAuthStore from '../store/authStore';
@@ -44,7 +44,7 @@ const ProgressScreen = ({ navigation }) => {
     };
     
     fetchData();
-  }, [user, isGuest, readingProgress, exerciseProgress, verbalFluencyProgress]);
+  }, [user, isGuest, readingProgress, exerciseProgress, verbalFluencyProgress, medals]);
   
   // Fetch data from Firestore for authenticated users
   const fetchFirestoreData = async () => {
@@ -97,6 +97,30 @@ const ProgressScreen = ({ navigation }) => {
     setExerciseStats({ total: exerciseCount + totalBooks, completed: exerciseCount });
     setVerbalsStats({ total: totalVerbalExercises, completed: verbalCount });
     setRecentActivity(activityList);
+    
+    // Cargar medallas directamente de la store para asegurarnos que estén sincronizadas
+    const userMedals = useProgressStore.getState().medals;
+    if (userMedals && userMedals.length > 0) {
+      console.log("Medals found in store:", userMedals.length);
+    }
+
+    // También intentar cargar desde Firestore si el usuario está autenticado
+    try {
+      const medalsCollection = collection(db, 'users', user.uid, 'medals');
+      const medalsSnapshot = await getDocs(medalsCollection);
+      
+      if (!medalsSnapshot.empty) {
+        // Si hay medallas en Firestore, actualizar la store global
+        const firestoreMedals = medalsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        console.log("Medals found in Firestore:", firestoreMedals.length);
+      }
+    } catch (error) {
+      console.error("Error fetching medals:", error);
+    }
   };
   
   // Use local progress for guest users
@@ -263,235 +287,240 @@ return (
       </View>
     </LinearGradient>
     
-    <ScrollView 
-      style={styles.content} 
+    <FlatList 
+      style={styles.content}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.contentScrollContainer}
-    >
-      <View style={styles.statsSection}>
-        <Text style={styles.sectionTitle}>Actividades</Text>
-        
-        <TouchableOpacity 
-          style={styles.activityCard}
-          onPress={() => navigateToActivity('reading')}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={['#5B86E5', '#36D1DC']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.activityIconContainer}
-          >
-            <Ionicons name="book" size={24} color="white" />
-          </LinearGradient>
-          <View style={styles.activityInfo}>
-            <Text style={styles.activityTitle}>Lecturas</Text>
-            <View style={styles.activityProgressContainer}>
-              <View style={styles.activityProgressBar}>
-                <View 
-                  style={[
-                    styles.activityProgressFill, 
-                    { 
-                      width: `${Math.max(1, (readingStats.completed / Math.max(1, readingStats.total)) * 100)}%`,
-                      backgroundColor: '#5B86E5'
-                    }
-                  ]} 
-                />
-              </View>
-              <Text style={styles.activityProgressText}>
-                {readingStats.completed}/{readingStats.total}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.activityCard}
-          onPress={() => navigateToActivity('reading')}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={['#7C5CEF', '#5B86E5']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.activityIconContainer}
-          >
-            <Ionicons name="document-text" size={24} color="white" />
-          </LinearGradient>
-          <View style={styles.activityInfo}>
-            <Text style={styles.activityTitle}>Comprensión</Text>
-            <View style={styles.activityProgressContainer}>
-              <View style={styles.activityProgressBar}>
-                <View 
-                  style={[
-                    styles.activityProgressFill, 
-                    { 
-                      width: `${Math.max(1, (exerciseStats.completed / Math.max(1, exerciseStats.total)) * 100)}%`,
-                      backgroundColor: '#7C5CEF'
-                    }
-                  ]}
-                />
-              </View>
-              <Text style={styles.activityProgressText}>
-                {exerciseStats.completed}/{exerciseStats.total}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.activityCard}
-          onPress={() => navigateToActivity('verbal')}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={['#36D1DC', '#5B86E5']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.activityIconContainer}
-          >
-            <Ionicons name="mic" size={24} color="white" />
-          </LinearGradient>
-          <View style={styles.activityInfo}>
-            <Text style={styles.activityTitle}>Fluidez Verbal</Text>
-            <View style={styles.activityProgressContainer}>
-              <View style={styles.activityProgressBar}>
-                <View 
-                  style={[
-                    styles.activityProgressFill, 
-                    { 
-                      width: `${Math.max(1, (verbalsStats.completed / Math.max(1, verbalsStats.total)) * 100)}%`,
-                      backgroundColor: '#36D1DC'
-                    }
-                  ]} 
-                />
-              </View>
-              <Text style={styles.activityProgressText}>
-                {verbalsStats.completed}/{verbalsStats.total}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
-      
-      {recentActivity.length > 0 && (
-        <View style={styles.recentActivitySection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Actividad Reciente</Text>
-          </View>
-          
-          {recentActivity.map((item, index) => renderActivityItem(item, index))}
-          
-          <TouchableOpacity 
-            style={styles.viewAllButton}
-            onPress={() => {
-              // Aquí podríamos navegar a una pantalla con historial completo
-              Alert.alert('Próximamente', 'El historial completo estará disponible en próximas versiones.');
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.viewAllText}>Ver todo el historial</Text>
-            <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
-          </TouchableOpacity>
-        </View>
-      )}
-      
-      <View style={styles.medalsSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Mis Logros</Text>
-          {medals.length > 3 && (
+      ListHeaderComponent={
+        <>
+          <View style={styles.statsSection}>
+            <Text style={styles.sectionTitle}>Actividades</Text>
+            
             <TouchableOpacity 
-              onPress={() => setShowAllMedals(!showAllMedals)}
-              style={styles.seeMoreButton}  
+              style={styles.activityCard}
+              onPress={() => navigateToActivity('reading')}
+              activeOpacity={0.9}
             >
-              <Text style={styles.seeMoreText}>
-                {showAllMedals ? 'Ver menos' : 'Ver todos'}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-        
-        {medals.length === 0 ? (
-          <View style={styles.emptyMedalsContainer}>
-            <Ionicons name="trophy" size={60} color={COLORS.textLight} style={{marginBottom: 16}} />
-            <Text style={styles.emptyMedalsText}>
-              ¡Completa actividades para ganar medallas!
-            </Text>
-            <TouchableOpacity 
-              style={styles.startButton}
-              onPress={() => navigation.navigate('MainTabs')}
-              activeOpacity={0.8}  
-            >
-              <Text style={styles.startButtonText}>Comenzar ahora</Text>
-              <Ionicons name="arrow-forward" size={16} color={COLORS.primary} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          (showAllMedals ? medals : medals.slice(0, 3)).map((medal, index) => (
-            <View key={index} style={styles.medalItem}>
               <LinearGradient
-                colors={getMedalGradient(medal.type)}
+                colors={['#5B86E5', '#36D1DC']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={styles.medalIconContainer}
+                style={styles.activityIconContainer}
               >
-                {getMedalIcon(medal.type)}
+                <Ionicons name="book" size={24} color="white" />
               </LinearGradient>
-              <View style={styles.medalInfo}>
-                <Text style={styles.medalTitle}>{medal.title}</Text>
-                <Text style={styles.medalDescription}>{medal.description}</Text>
-                <Text style={styles.medalDate}>
-                  {new Date(medal.date).toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityTitle}>Lecturas</Text>
+                <View style={styles.activityProgressContainer}>
+                  <View style={styles.activityProgressBar}>
+                    <View 
+                      style={[
+                        styles.activityProgressFill, 
+                        { 
+                          width: `${Math.max(1, (readingStats.completed / Math.max(1, readingStats.total)) * 100)}%`,
+                          backgroundColor: '#5B86E5'
+                        }
+                      ]} 
+                    />
+                  </View>
+                  <Text style={styles.activityProgressText}>
+                    {readingStats.completed}/{readingStats.total}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.activityCard}
+              onPress={() => navigateToActivity('reading')}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={['#7C5CEF', '#5B86E5']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.activityIconContainer}
+              >
+                <Ionicons name="document-text" size={24} color="white" />
+              </LinearGradient>
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityTitle}>Comprensión</Text>
+                <View style={styles.activityProgressContainer}>
+                  <View style={styles.activityProgressBar}>
+                    <View 
+                      style={[
+                        styles.activityProgressFill, 
+                        { 
+                          width: `${Math.max(1, (exerciseStats.completed / Math.max(1, exerciseStats.total)) * 100)}%`,
+                          backgroundColor: '#7C5CEF'
+                        }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.activityProgressText}>
+                    {exerciseStats.completed}/{exerciseStats.total}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.activityCard}
+              onPress={() => navigateToActivity('verbal')}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={['#36D1DC', '#5B86E5']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.activityIconContainer}
+              >
+                <Ionicons name="mic" size={24} color="white" />
+              </LinearGradient>
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityTitle}>Fluidez Verbal</Text>
+                <View style={styles.activityProgressContainer}>
+                  <View style={styles.activityProgressBar}>
+                    <View 
+                      style={[
+                        styles.activityProgressFill, 
+                        { 
+                          width: `${Math.max(1, (verbalsStats.completed / Math.max(1, verbalsStats.total)) * 100)}%`,
+                          backgroundColor: '#36D1DC'
+                        }
+                      ]} 
+                    />
+                  </View>
+                  <Text style={styles.activityProgressText}>
+                    {verbalsStats.completed}/{verbalsStats.total}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+          
+          {recentActivity.length > 0 && (
+            <View style={styles.recentActivitySection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Actividad Reciente</Text>
+              </View>
+              
+              {recentActivity.map((item, index) => renderActivityItem(item, index))}
+              
+              <TouchableOpacity 
+                style={styles.viewAllButton}
+                onPress={() => {
+                  // Aquí podríamos navegar a una pantalla con historial completo
+                  Alert.alert('Próximamente', 'El historial completo estará disponible en próximas versiones.');
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.viewAllText}>Ver todo el historial</Text>
+                <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
+          )}
+          
+          <View style={styles.medalsSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Mis Logros</Text>
+              {medals.length > 3 && (
+                <TouchableOpacity 
+                  onPress={() => setShowAllMedals(!showAllMedals)}
+                  style={styles.seeMoreButton}  
+                >
+                  <Text style={styles.seeMoreText}>
+                    {showAllMedals ? 'Ver menos' : 'Ver todos'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            {medals.length === 0 ? (
+              <View style={styles.emptyMedalsContainer}>
+                <Ionicons name="trophy" size={60} color={COLORS.textLight} style={{marginBottom: 16}} />
+                <Text style={styles.emptyMedalsText}>
+                  ¡Completa actividades para ganar medallas!
                 </Text>
+                <TouchableOpacity 
+                  style={styles.startButton}
+                  onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
+                  activeOpacity={0.8}  
+                >
+                  <Text style={styles.startButtonText}>Comenzar ahora</Text>
+                  <Ionicons name="arrow-forward" size={16} color={COLORS.primary} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View>
+                {(showAllMedals ? medals : medals.slice(0, 3)).map((medal, index) => (
+                  <View key={medal.id || index} style={styles.medalItem}>
+                    <LinearGradient
+                      colors={getMedalGradient(medal.type)}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.medalIconContainer}
+                    >
+                      {getMedalIcon(medal.type)}
+                    </LinearGradient>
+                    <View style={styles.medalInfo}>
+                      <Text style={styles.medalTitle}>{medal.title}</Text>
+                      <Text style={styles.medalDescription}>{medal.description}</Text>
+                      <Text style={styles.medalDate}>
+                        {new Date(medal.date).toLocaleDateString('es-ES', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.weeklyStatsContainer}>
+            <Text style={styles.sectionTitle}>Esta semana</Text>
+            <View style={styles.weeklyStatsCard}>
+              <View style={styles.weeklyStatItem}>
+                <View style={[styles.statIconContainer, {backgroundColor: 'rgba(91, 134, 229, 0.15)'}]}>
+                  <Ionicons name="time" size={20} color={COLORS.primary} />
+                </View>
+                <Text style={styles.weeklyStatValue}>
+                  {(readingStats.completed + exerciseStats.completed) * 5} min
+                </Text>
+                <Text style={styles.weeklyStatLabel}>Tiempo total</Text>
+              </View>
+              
+              <View style={styles.statDivider} />
+              
+              <View style={styles.weeklyStatItem}>
+                <View style={[styles.statIconContainer, {backgroundColor: 'rgba(124, 92, 239, 0.15)'}]}>
+                  <Ionicons name="checkmark-circle" size={20} color={COLORS.accent} />
+                </View>
+                <Text style={[styles.weeklyStatValue, {color: COLORS.accent}]}>
+                  {completedActivities}
+                </Text>
+                <Text style={styles.weeklyStatLabel}>Completados</Text>
+              </View>
+              
+              <View style={styles.statDivider} />
+              
+              <View style={styles.weeklyStatItem}>
+                <View style={[styles.statIconContainer, {backgroundColor: 'rgba(255, 152, 0, 0.15)'}]}>
+                  <Ionicons name="trending-up" size={20} color={COLORS.warning} />
+                </View>
+                <Text style={[styles.weeklyStatValue, {color: COLORS.warning}]}>
+                  {medals.length}
+                </Text>
+                <Text style={styles.weeklyStatLabel}>Logros</Text>
               </View>
             </View>
-          ))
-        )}
-      </View>
-      
-      <View style={styles.weeklyStatsContainer}>
-        <Text style={styles.sectionTitle}>Esta semana</Text>
-        <View style={styles.weeklyStatsCard}>
-          <View style={styles.weeklyStatItem}>
-            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(91, 134, 229, 0.15)'}]}>
-              <Ionicons name="time" size={20} color={COLORS.primary} />
-            </View>
-            <Text style={styles.weeklyStatValue}>
-              {(readingStats.completed + exerciseStats.completed) * 5} min
-            </Text>
-            <Text style={styles.weeklyStatLabel}>Tiempo total</Text>
           </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.weeklyStatItem}>
-            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(124, 92, 239, 0.15)'}]}>
-              <Ionicons name="checkmark-circle" size={20} color={COLORS.accent} />
-            </View>
-            <Text style={[styles.weeklyStatValue, {color: COLORS.accent}]}>
-              {completedActivities}
-            </Text>
-            <Text style={styles.weeklyStatLabel}>Completados</Text>
-          </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.weeklyStatItem}>
-            <View style={[styles.statIconContainer, {backgroundColor: 'rgba(255, 152, 0, 0.15)'}]}>
-              <Ionicons name="trending-up" size={20} color={COLORS.warning} />
-            </View>
-            <Text style={[styles.weeklyStatValue, {color: COLORS.warning}]}>
-              {medals.length}
-            </Text>
-            <Text style={styles.weeklyStatLabel}>Logros</Text>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+        </>
+      }
+    />
   </SafeAreaView>
 );
 };
