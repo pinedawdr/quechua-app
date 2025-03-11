@@ -34,6 +34,37 @@ const ProfileScreen = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   
+  // Sincronizar el nivel con Firestore
+  const syncLevelWithFirestore = async () => {
+    if (!isGuest && user && userLevel > 1) {
+      try {
+        // Actualizar el nivel en el perfil del usuario en Firestore
+        await updateDoc(doc(db, 'users', user.uid), {
+          level: getLevelLabel(userLevel),
+          userLevel: userLevel,
+          updatedAt: new Date().toISOString()
+        });
+        console.log(`Nivel actualizado en Firestore: ${getLevelLabel(userLevel)}`);
+      } catch (error) {
+        console.error('Error al sincronizar el nivel con Firestore:', error);
+      }
+    }
+  };
+  
+  // Actualizar nivel cuando cambien las medallas
+  useEffect(() => {
+    if (medals && medals.length > 0) {
+      // Actualizar nivel basado en las medallas del store global
+      const calculatedLevel = calculateUserLevel(medals.length);
+      setUserLevel(calculatedLevel);
+      setLevel(getLevelLabel(calculatedLevel));
+      setUserMedals(medals.length);
+      
+      // Sincronizar con Firestore
+      syncLevelWithFirestore();
+    }
+  }, [medals]);
+  
   // Cargar datos de perfil adicionales al iniciar
   useEffect(() => {
     const loadProfileData = async () => {
@@ -47,6 +78,12 @@ const ProfileScreen = ({ navigation }) => {
             // Cargar la foto de perfil si existe
             if (userData.profileImage) {
               setProfileImage(userData.profileImage);
+            }
+            
+            // Si hay un nivel guardado en Firestore, usarlo
+            if (userData.userLevel) {
+              setUserLevel(userData.userLevel);
+              setLevel(getLevelLabel(userData.userLevel));
             }
           }
           
@@ -128,11 +165,11 @@ const ProfileScreen = ({ navigation }) => {
   }, [user, isGuest]); // Eliminar medals de las dependencias
   
   // Calcular nivel de usuario basado en medallas
-  const calculateUserLevel = (medals) => {
-    if (medals >= 20) return 5; // Experto
-    if (medals >= 15) return 4; // Avanzado
-    if (medals >= 10) return 3; // Intermedio
-    if (medals >= 5) return 2;  // Básico
+  const calculateUserLevel = (medalsCount) => {
+    if (medalsCount >= 20) return 5; // Experto
+    if (medalsCount >= 15) return 4; // Avanzado
+    if (medalsCount >= 10) return 3; // Intermedio
+    if (medalsCount >= 5) return 2;  // Básico
     return 1; // Principiante
   };
   
@@ -200,6 +237,12 @@ const ProfileScreen = ({ navigation }) => {
               profileImage: imageUrl,
               updatedAt: new Date().toISOString()
             }, { merge: true });
+            
+            // Actualizar en el objeto user
+            setUser({
+              ...user,
+              profileImage: imageUrl
+            });
             
             Alert.alert('Éxito', 'Foto de perfil actualizada correctamente');
           }
@@ -269,6 +312,12 @@ const ProfileScreen = ({ navigation }) => {
               profileImage: imageUrl,
               updatedAt: new Date().toISOString()
             }, { merge: true });
+            
+            // Actualizar en el objeto user
+            setUser({
+              ...user,
+              profileImage: imageUrl
+            });
             
             Alert.alert('Éxito', 'Foto de perfil actualizada correctamente');
           }
@@ -353,6 +402,10 @@ const ProfileScreen = ({ navigation }) => {
     try {
       setSaving(true);
       
+      // Calcular nivel actual basado en medallas
+      const currentLevel = calculateUserLevel(medals.length);
+      const levelLabel = getLevelLabel(currentLevel);
+      
       // Update Firebase Auth profile
       await updateProfile(auth.currentUser, {
         displayName: `${name} ${lastName}`.trim()
@@ -363,7 +416,8 @@ const ProfileScreen = ({ navigation }) => {
         name,
         lastName,
         institution,
-        level,
+        level: levelLabel, // Usar el nivel calculado actual
+        userLevel: currentLevel, // Guardar también el valor numérico
         notifications,
         updatedAt: new Date().toISOString()
       }, { merge: true });
@@ -375,7 +429,15 @@ const ProfileScreen = ({ navigation }) => {
       }, { merge: true });
       
       // Update local state
-      setUser({ ...user, displayName: `${name} ${lastName}`.trim() });
+      setUser({ 
+        ...user, 
+        displayName: `${name} ${lastName}`.trim(),
+        profileImage: profileImage // Asegurar que la imagen esté incluida
+      });
+      
+      // También actualizar nivel local por si acaso
+      setUserLevel(currentLevel);
+      setLevel(levelLabel);
       
       Alert.alert('Éxito', 'Tu perfil ha sido actualizado');
     } catch (error) {
@@ -481,6 +543,7 @@ const ProfileScreen = ({ navigation }) => {
                   // Actualizar el nivel en el perfil del usuario
                   await updateDoc(doc(db, 'users', user.uid), {
                     level: 'Principiante',
+                    userLevel: 1,
                     updatedAt: new Date().toISOString()
                   });
                 } catch (firebaseError) {

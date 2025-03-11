@@ -1,6 +1,6 @@
 // src/store/progressStore.js
 import { create } from 'zustand';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 const useProgressStore = create((set, get) => ({
@@ -30,9 +30,16 @@ const useProgressStore = create((set, get) => ({
     }
   }),
   
-  addMedal: (medal) => set({
-    medals: [...get().medals, medal]
-  }),
+  addMedal: (medal) => {
+    const currentMedals = get().medals;
+    // Verificar si la medalla ya existe antes de agregarla
+    const medalExists = currentMedals.some(m => m.id === medal.id);
+    if (!medalExists) {
+      set({
+        medals: [...currentMedals, medal]
+      });
+    }
+  },
   
   // Reemplazar todas las medallas (para sincronización)
   setMedals: (medals) => set({
@@ -40,6 +47,52 @@ const useProgressStore = create((set, get) => ({
   }),
   
   // Sincronizar con Firestore (para usuarios autenticados)
+  loadMedalsFromFirestore: async (userId) => {
+    try {
+      if (!userId) return [];
+      
+      const medalsCollection = collection(db, 'users', userId, 'medals');
+      const medalsSnapshot = await getDocs(medalsCollection);
+      
+      if (!medalsSnapshot.empty) {
+        const loadedMedals = medalsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        set({ medals: loadedMedals });
+        return loadedMedals;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error loading medals:", error);
+      return [];
+    }
+  },
+  
+  loadMedalsFromFirestore: async (userId) => {
+    try {
+      if (!userId) return [];
+      
+      const medalsCollection = collection(db, 'users', userId, 'medals');
+      const medalsSnapshot = await getDocs(medalsCollection);
+      
+      if (!medalsSnapshot.empty) {
+        const loadedMedals = medalsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        set({ medals: loadedMedals });
+        return loadedMedals;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error loading medals:", error);
+      return [];
+    }
+  },
+  
   syncMedalsWithFirestore: async (userId) => {
     try {
       if (!userId) return;
@@ -47,12 +100,14 @@ const useProgressStore = create((set, get) => ({
       const currentMedals = get().medals;
       
       // Guardar cada medalla en Firestore
-      for (const medal of currentMedals) {
-        await setDoc(doc(db, 'users', userId, 'medals', medal.id), {
+      const promises = currentMedals.map(medal => 
+        setDoc(doc(db, 'users', userId, 'medals', medal.id), {
           ...medal,
           syncedAt: new Date().toISOString()
-        }, { merge: true });
-      }
+        }, { merge: true })
+      );
+      
+      await Promise.all(promises);
       
       // Actualizar el contador de medallas
       await setDoc(doc(db, 'users', userId, 'stats', 'medals'), {

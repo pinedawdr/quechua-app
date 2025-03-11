@@ -1,6 +1,6 @@
 // src/screens/ProgressScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, SafeAreaView, Image } from 'react-native';
 import { collection, getDocs, query, where, limit, doc, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import useProgressStore from '../store/progressStore';
@@ -40,28 +40,32 @@ const ProgressScreen = ({ navigation }) => {
     };
     
     fetchData();
-    // Eliminar readingProgress, exerciseProgress, verbalFluencyProgress, medals de las dependencias
-  }, [user, isGuest]);
+  }, [user, isGuest, medals]); // Añadir medals como dependencia
   
-  // Extraer datos de Firestore para usuarios autenticados sin actualizar el store
+  // Extraer datos de Firestore para usuarios autenticados
   const fetchFirestoreData = async () => {
     try {
-      // Fetch reading stats
-      const readingQuery = query(collection(db, 'users', user.uid, 'reading'));
-      const readingSnapshot = await getDocs(readingQuery);
-      const readingCount = readingSnapshot.size;
-      
-      // Fetch total books from database
+      // Obtener total de libros de la base de datos
       const booksQuery = query(collection(db, 'books'));
       const booksSnapshot = await getDocs(booksQuery);
       const totalBooks = booksSnapshot.size;
       
-      // Fetch exercise stats
+      // Obtener libros completados por el usuario
+      const readingQuery = query(collection(db, 'users', user.uid, 'reading'));
+      const readingSnapshot = await getDocs(readingQuery);
+      const readingCount = readingSnapshot.size;
+      
+      // Obtener quizzes completados
       const exerciseQuery = query(collection(db, 'users', user.uid, 'quizzes'));
       const exerciseSnapshot = await getDocs(exerciseQuery);
       const exerciseCount = exerciseSnapshot.size;
       
-      // Fetch verbal fluency stats
+      // Obtener total de ejercicios verbales
+      const verbalExercisesQuery = query(collection(db, 'verbalExercises'));
+      const verbalExercisesSnapshot = await getDocs(verbalExercisesQuery);
+      const totalVerbalExercises = verbalExercisesSnapshot.size;
+      
+      // Obtener ejercicios verbales completados
       const verbalQuery = query(
         collection(db, 'users', user.uid, 'verbalExercises'),
         where('completed', '==', true)
@@ -69,10 +73,10 @@ const ProgressScreen = ({ navigation }) => {
       const verbalSnapshot = await getDocs(verbalQuery);
       const verbalCount = verbalSnapshot.size;
       
-      // Fetch total verbal exercises from database
-      const verbalExercisesQuery = query(collection(db, 'verbalExercises'));
-      const verbalExercisesSnapshot = await getDocs(verbalExercisesQuery);
-      const totalVerbalExercises = verbalExercisesSnapshot.size;
+      // Actualizar estadísticas
+      setReadingStats({ total: totalBooks || 5, completed: readingCount });
+      setExerciseStats({ total: totalBooks || 5, completed: exerciseCount });
+      setVerbalsStats({ total: totalVerbalExercises || 5, completed: verbalCount });
       
       // Fetch recent activity
       const activityQuery = query(
@@ -86,10 +90,6 @@ const ProgressScreen = ({ navigation }) => {
         ...doc.data()
       }));
       
-      // Set statistics en estado local
-      setReadingStats({ total: totalBooks, completed: readingCount });
-      setExerciseStats({ total: exerciseCount + totalBooks, completed: exerciseCount });
-      setVerbalsStats({ total: totalVerbalExercises, completed: verbalCount });
       setRecentActivity(activityList);
       
       // Cargar medallas desde Firestore
@@ -157,23 +157,16 @@ const ProgressScreen = ({ navigation }) => {
       }))
     ];
     
-    // Sort by timestamp
+    // Ordenar por timestamp
     combinedActivity.sort((a, b) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
     
     setRecentActivity(combinedActivity.slice(0, 5));
     
-    // Usar medallas del store para usuarios invitados
+    // Usar medallas directamente del parámetro para usuarios invitados
     setUserMedals(medals);
   };
-  
-  // Actualizar medallas cuando cambien en el store
-  useEffect(() => {
-    if (isGuest || !user) {
-      setUserMedals(medals);
-    }
-  }, [medals, isGuest, user]);
   
   // Calculate overall progress percentage
   const totalActivities = readingStats.total + exerciseStats.total + verbalsStats.total;
@@ -269,6 +262,34 @@ const renderActivityItem = (item, index) => {
   );
 };
 
+// Función para obtener el icono según el tipo de medalla
+const getMedalIcon = (type) => {
+  switch(type) {
+    case 'quiz':
+      return <Ionicons name="school" size={24} color="white" />;
+    case 'verbal':
+      return <Ionicons name="mic" size={24} color="white" />;
+    case 'narrative':
+      return <Ionicons name="book" size={24} color="white" />;
+    default:
+      return <Ionicons name="trophy" size={24} color="white" />;
+  }
+};
+
+// Función para obtener el color según el tipo de medalla
+const getMedalGradient = (type) => {
+  switch(type) {
+    case 'quiz':
+      return ['#5B86E5', '#36D1DC'];
+    case 'verbal':
+      return ['#7C5CEF', '#5B86E5'];
+    case 'narrative':
+      return ['#36D1DC', '#5B86E5'];
+    default:
+      return ['#FF9E80', '#FF6E40'];
+  }
+};
+
 return (
   <SafeAreaView style={globalStyles.container}>
     <LinearGradient
@@ -284,9 +305,17 @@ return (
           onPress={() => navigation.navigate('Profile')}
           activeOpacity={0.8}
         >
-          <Text style={styles.avatarText}>
-            {(isGuest ? guestName : (user?.displayName || 'Usuario')).charAt(0).toUpperCase()}
-          </Text>
+          {user && user.profileImage ? (
+            <Image 
+              source={{ uri: user.profileImage }}
+              style={styles.avatarImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={styles.avatarText}>
+              {(isGuest ? guestName : (user?.displayName || 'Usuario')).charAt(0).toUpperCase()}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
       
@@ -321,7 +350,10 @@ return (
                 <Ionicons name="book" size={24} color="white" />
               </LinearGradient>
               <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Lecturas</Text>
+                <Text style={styles.activityTitle}>Actividades de Lectura</Text>
+                <Text style={styles.activityDescription}>
+                  Libros interactivos en quechua para practicar tu lectura
+                </Text>
                 <View style={styles.activityProgressContainer}>
                   <View style={styles.activityProgressBar}>
                     <View 
@@ -343,7 +375,7 @@ return (
             
             <TouchableOpacity 
               style={styles.activityCard}
-              onPress={() => navigateToActivity('reading')}
+              onPress={() => navigateToActivity('verbal')}
               activeOpacity={0.9}
             >
               <LinearGradient
@@ -352,24 +384,27 @@ return (
                 end={{ x: 1, y: 0 }}
                 style={styles.activityIconContainer}
               >
-                <Ionicons name="document-text" size={24} color="white" />
+                <Ionicons name="mic" size={24} color="white" />
               </LinearGradient>
               <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Comprensión</Text>
+                <Text style={styles.activityTitle}>Ejercicios de Fluidez</Text>
+                <Text style={styles.activityDescription}>
+                  Practica tu pronunciación y habla en quechua
+                </Text>
                 <View style={styles.activityProgressContainer}>
                   <View style={styles.activityProgressBar}>
                     <View 
                       style={[
                         styles.activityProgressFill, 
                         { 
-                          width: `${Math.max(1, (exerciseStats.completed / Math.max(1, exerciseStats.total)) * 100)}%`,
+                          width: `${Math.max(1, (verbalsStats.completed / Math.max(1, verbalsStats.total)) * 100)}%`,
                           backgroundColor: '#7C5CEF'
                         }
                       ]}
                     />
                   </View>
                   <Text style={styles.activityProgressText}>
-                    {exerciseStats.completed}/{exerciseStats.total}
+                    {verbalsStats.completed}/{verbalsStats.total}
                   </Text>
                 </View>
               </View>
@@ -377,7 +412,7 @@ return (
             
             <TouchableOpacity 
               style={styles.activityCard}
-              onPress={() => navigateToActivity('verbal')}
+              onPress={() => navigateToActivity('interactive')}
               activeOpacity={0.9}
             >
               <LinearGradient
@@ -386,24 +421,27 @@ return (
                 end={{ x: 1, y: 0 }}
                 style={styles.activityIconContainer}
               >
-                <Ionicons name="mic" size={24} color="white" />
+                <Ionicons name="chatbubbles" size={24} color="white" />
               </LinearGradient>
               <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Fluidez Verbal</Text>
+                <Text style={styles.activityTitle}>Narrativas Interactivas</Text>
+                <Text style={styles.activityDescription}>
+                  Participa en historias interactivas en quechua
+                </Text>
                 <View style={styles.activityProgressContainer}>
                   <View style={styles.activityProgressBar}>
                     <View 
                       style={[
                         styles.activityProgressFill, 
                         { 
-                          width: `${Math.max(1, (verbalsStats.completed / Math.max(1, verbalsStats.total)) * 100)}%`,
+                          width: `${Math.max(1, (exerciseStats.completed / Math.max(1, exerciseStats.total)) * 100)}%`,
                           backgroundColor: '#36D1DC'
                         }
                       ]} 
                     />
                   </View>
                   <Text style={styles.activityProgressText}>
-                    {verbalsStats.completed}/{verbalsStats.total}
+                    {exerciseStats.completed}/{exerciseStats.total}
                   </Text>
                 </View>
               </View>
@@ -455,7 +493,7 @@ return (
                 </Text>
                 <TouchableOpacity 
                   style={styles.startButton}
-                  onPress={() => navigation.navigate('MainTabs')}
+                  onPress={() => navigation.navigate('Home')} // Cambiado a 'Home'
                   activeOpacity={0.8}  
                 >
                   <Text style={styles.startButtonText}>Comenzar ahora</Text>
@@ -519,8 +557,8 @@ return (
               <View style={styles.statDivider} />
               
               <View style={styles.weeklyStatItem}>
-                <View style={[styles.statIconContainer, {backgroundColor: 'rgba(255, 152, 0, 0.15)'}]}>
-                  <Ionicons name="trending-up" size={20} color={COLORS.warning} />
+              <View style={[styles.statIconContainer, {backgroundColor: 'rgba(255, 152, 0, 0.15)'}]}>
+                  <Ionicons name="trophy" size={20} color={COLORS.warning} />
                 </View>
                 <Text style={[styles.weeklyStatValue, {color: COLORS.warning}]}>
                   {userMedals.length}
@@ -534,34 +572,6 @@ return (
     />
   </SafeAreaView>
 );
-};
-
-// Función auxiliar para obtener el color según el tipo de medalla
-const getMedalGradient = (type) => {
-switch(type) {
-  case 'quiz':
-    return ['#5B86E5', '#36D1DC'];
-  case 'verbal':
-    return ['#7C5CEF', '#5B86E5'];
-  case 'narrative':
-    return ['#36D1DC', '#5B86E5'];
-  default:
-    return ['#FF9E80', '#FF6E40'];
-}
-};
-
-// Función auxiliar para obtener el icono según el tipo de medalla
-const getMedalIcon = (type) => {
-switch(type) {
-  case 'quiz':
-    return <Ionicons name="book" size={24} color="white" />;
-  case 'verbal':
-    return <Ionicons name="mic" size={24} color="white" />;
-  case 'narrative':
-    return <Ionicons name="chatbubbles" size={24} color="white" />;
-  default:
-    return <Ionicons name="trophy" size={24} color="white" />;
-}
 };
 
 const styles = StyleSheet.create({
@@ -591,11 +601,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.5)',
+    overflow: 'hidden',
   },
   avatarText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
   },
   progressCircleWrapper: {
     alignItems: 'center',
@@ -683,7 +699,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.text,
+    marginBottom: 4,
+  },
+  activityDescription: {
+    fontSize: 14,
+    color: COLORS.textLight,
     marginBottom: 10,
+    lineHeight: 18,
   },
   activityProgressContainer: {
     flexDirection: 'row',

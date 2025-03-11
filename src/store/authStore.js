@@ -25,7 +25,12 @@ const useAuthStore = create((set) => ({
     isAuthenticated: false,
     isGuest: false,
     guestName: ''
-  })
+  }),
+
+  // Método para actualizar datos específicos del usuario
+  updateUserData: (userData) => set(state => ({
+    user: { ...state.user, ...userData }
+  }))
 }));
 
 export default useAuthStore;
